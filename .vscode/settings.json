@@ -3,5 +3,12 @@
     "source.fixAll": "explicit",
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
-  }
+  },
+  "cSpell.words": [
+    "Activité",
+    "cpam",
+    "d'alerte",
+    "livreur",
+    "Signaux"
+  ]
 }
