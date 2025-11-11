@@ -4,6 +4,7 @@
 // ============================================
 
 import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -79,7 +80,13 @@ export default function BradScanner() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <LinearGradient
+      colors={['#E6F4FE', '#F0FDF4']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.container}
+    >
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
       {/* Card principale */}
       <View style={styles.card}>
         {/* Message input */}
@@ -257,14 +264,17 @@ export default function BradScanner() {
           En cas de doute sérieux, contactez les autorités.
         </Text>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: BradColors.grisClair,
+  },
+  scrollView: {
+    flex: 1,
   },
   contentContainer: {
     padding: 16,

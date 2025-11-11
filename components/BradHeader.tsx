@@ -16,7 +16,7 @@ export default function BradHeader() {
 const styles = StyleSheet.create({
   header: {
     backgroundColor: BradColors.blanc,
-    paddingVertical: 20,
+    paddingVertical: 16,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: BradColors.grisMoyen,
@@ -24,8 +24,10 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     flexDirection: 'row',
-    alignItems: 'baseline',
-    marginBottom: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+    height: 40,
   },
   logoText: {
     fontSize: 32,

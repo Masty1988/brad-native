@@ -7,6 +7,8 @@ import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import {
+    Dimensions,
+    Modal,
     ScrollView,
     Share,
     StyleSheet,
@@ -15,6 +17,9 @@ import {
     View
 } from 'react-native';
 import { BradColors } from '@/constants/colors';
+
+const { width } = Dimensions.get('window');
+const isMobile = width < 768;
 
 const SCAM_FEED = [
   {
@@ -91,6 +96,7 @@ const SCAM_FEED = [
 export default function BradFeed() {
   const [selectedScam, setSelectedScam] = useState(SCAM_FEED[0]);
   const [bookmarked, setBookmarked] = useState([]);
+  const [sidebarVisible, setSidebarVisible] = useState(false);
 
   useEffect(() => {
     loadBookmarks();
@@ -140,43 +146,105 @@ export default function BradFeed() {
 
   return (
     <View style={styles.container}>
-      {/* Sidebar - Liste */}
-      <ScrollView style={styles.sidebar} contentContainerStyle={styles.sidebarContent}>
-        <View style={styles.sidebarHeader}>
-          <Feather name="alert-triangle" size={20} color="#EF4444" />
-          <Text style={styles.sidebarTitle}>Arnaques récentes</Text>
-        </View>
-
-        {SCAM_FEED.map((scam) => (
+      {/* Burger menu mobile en haut à gauche */}
+      {isMobile && (
+        <View style={styles.mobileHeader}>
           <TouchableOpacity
-            key={scam.id}
-            style={[
-              styles.scamItem,
-              selectedScam.id === scam.id && styles.scamItemActive
-            ]}
-            onPress={() => setSelectedScam(scam)}
+            style={styles.burgerButton}
+            onPress={() => setSidebarVisible(true)}
           >
-            <View style={styles.scamItemHeader}>
-              <Text style={styles.scamCategory}>{scam.category}</Text>
-              {scam.trending && (
-                <Feather name="trending-up" size={16} color="#EF4444" />
-              )}
-            </View>
-            <Text style={styles.scamItemTitle} numberOfLines={2}>{scam.title}</Text>
-            <View style={styles.scamItemFooter}>
-              <View style={styles.scamItemDate}>
-                <Feather name="clock" size={12} color="#6B7280" />
-                <Text style={styles.scamItemDateText}>
-                  {new Date(scam.date).toLocaleDateString('fr-FR')}
-                </Text>
-              </View>
-              <View style={[styles.scamItemBadge, { backgroundColor: getSeverityColor(scam.severity) }]}>
-                <Text style={styles.scamItemBadgeText}>{scam.dangerLevel}%</Text>
-              </View>
-            </View>
+            <Feather name="menu" size={24} color={BradColors.blanc} />
           </TouchableOpacity>
-        ))}
-      </ScrollView>
+          <Text style={styles.mobileHeaderTitle} numberOfLines={1}>
+            {selectedScam.category}
+          </Text>
+        </View>
+      )}
+
+      {/* Sidebar - Desktop uniquement */}
+      {!isMobile && (
+        <ScrollView style={styles.sidebar} contentContainerStyle={styles.sidebarContent}>
+          <View style={styles.sidebarHeader}>
+            <Feather name="alert-triangle" size={20} color="#EF4444" />
+            <Text style={styles.sidebarTitle}>Arnaques récentes</Text>
+          </View>
+
+          {SCAM_FEED.map((scam) => (
+            <TouchableOpacity
+              key={scam.id}
+              style={[
+                styles.scamItem,
+                selectedScam.id === scam.id && styles.scamItemActive
+              ]}
+              onPress={() => setSelectedScam(scam)}
+            >
+              <View style={styles.scamItemHeader}>
+                <Text style={styles.scamCategory}>{scam.category}</Text>
+                {scam.trending && (
+                  <Feather name="trending-up" size={16} color="#EF4444" />
+                )}
+              </View>
+              <Text style={styles.scamItemTitle} numberOfLines={2}>{scam.title}</Text>
+              <View style={styles.scamItemFooter}>
+                <View style={styles.scamItemDate}>
+                  <Feather name="clock" size={12} color="#6B7280" />
+                  <Text style={styles.scamItemDateText}>
+                    {new Date(scam.date).toLocaleDateString('fr-FR')}
+                  </Text>
+                </View>
+                <View style={[styles.scamItemBadge, { backgroundColor: getSeverityColor(scam.severity) }]}>
+                  <Text style={styles.scamItemBadgeText}>{scam.dangerLevel}%</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
+
+      {/* Modal pour sélection mobile */}
+      <Modal
+        visible={sidebarVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setSidebarVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Choisir une arnaque</Text>
+              <TouchableOpacity onPress={() => setSidebarVisible(false)}>
+                <Feather name="x" size={24} color={BradColors.text.primary} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView>
+              {SCAM_FEED.map((scam) => (
+                <TouchableOpacity
+                  key={scam.id}
+                  style={[
+                    styles.modalItem,
+                    selectedScam.id === scam.id && styles.modalItemActive
+                  ]}
+                  onPress={() => {
+                    setSelectedScam(scam);
+                    setSidebarVisible(false);
+                  }}
+                >
+                  <View style={styles.modalItemHeader}>
+                    <Text style={styles.scamCategory}>{scam.category}</Text>
+                    {scam.trending && (
+                      <Feather name="trending-up" size={16} color="#EF4444" />
+                    )}
+                  </View>
+                  <Text style={styles.modalItemTitle}>{scam.title}</Text>
+                  <View style={[styles.scamItemBadge, { backgroundColor: getSeverityColor(scam.severity) }]}>
+                    <Text style={styles.scamItemBadgeText}>{scam.dangerLevel}%</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
       {/* Main Content - Détail */}
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
@@ -316,7 +384,7 @@ export default function BradFeed() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: isMobile ? 'column' : 'row',
     backgroundColor: BradColors.grisClair,
   },
   sidebar: {
@@ -617,5 +685,77 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#7E22CE',
     fontWeight: '600',
+  },
+  // Styles mobile
+  mobileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: BradColors.bleuBrad,
+    padding: 12,
+    gap: 12,
+  },
+  burgerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mobileHeaderTitle: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '700',
+    color: BradColors.blanc,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'flex-start',
+    paddingTop: 60,
+  },
+  modalContent: {
+    backgroundColor: BradColors.blanc,
+    borderRadius: 16,
+    maxHeight: '50%',
+    marginHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: BradColors.grisMoyen,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: BradColors.text.primary,
+  },
+  modalItem: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: BradColors.grisMoyen,
+  },
+  modalItemActive: {
+    backgroundColor: '#EFF6FF',
+  },
+  modalItemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  modalItemTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: BradColors.text.primary,
+    marginBottom: 8,
   },
 });
