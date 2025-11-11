@@ -14,6 +14,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import { BradColors } from '@/constants/colors';
 
 const SCAM_FEED = [
   {
@@ -316,13 +317,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'row',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: BradColors.grisClair,
   },
   sidebar: {
     width: 140,
-    backgroundColor: '#fff',
+    backgroundColor: BradColors.blanc,
     borderRightWidth: 1,
-    borderRightColor: '#E5E7EB',
+    borderRightColor: BradColors.grisMoyen,
   },
   sidebarContent: {
     padding: 8,
@@ -398,7 +399,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: BradColors.blanc,
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',

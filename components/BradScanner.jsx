@@ -16,6 +16,7 @@ import {
   View
 } from 'react-native';
 import { analyzeMessage } from '../utils/scamDetector';
+import { BradColors, getRiskColor, getRiskBackground } from '@/constants/colors';
 
 export default function BradScanner() {
   const [message, setMessage] = useState('');
@@ -68,19 +69,7 @@ export default function BradScanner() {
     setAnalysis(null);
   };
 
-  const getRiskColor = (score) => {
-    if (score >= 70) return '#EF4444';
-    if (score >= 40) return '#F97316';
-    if (score >= 20) return '#EAB308';
-    return '#10B981';
-  };
-
-  const getRiskBgColor = (score) => {
-    if (score >= 70) return '#FEE2E2';
-    if (score >= 40) return '#FFEDD5';
-    if (score >= 20) return '#FEF3C7';
-    return '#D1FAE5';
-  };
+  // Risk color and background helpers are imported from constants/colors
 
   const getRiskLabel = (score) => {
     if (score >= 70) return 'DANGER';
@@ -196,7 +185,7 @@ export default function BradScanner() {
             </View>
 
             {/* Recommendation */}
-            <View style={[styles.recommendationBox, { backgroundColor: getRiskBgColor(analysis.riskScore) }]}>
+            <View style={[styles.recommendationBox, { backgroundColor: getRiskBackground(analysis.riskScore) }]}>
               <View style={styles.recommendationHeader}>
                 {analysis.riskScore >= 70 ? (
                   <Feather name="alert-triangle" size={24} color={getRiskColor(analysis.riskScore)} />
@@ -275,14 +264,14 @@ export default function BradScanner() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: BradColors.grisClair,
   },
   contentContainer: {
     padding: 16,
     paddingBottom: 32,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: BradColors.blanc,
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
@@ -356,7 +345,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   analyzeButton: {
-    backgroundColor: '#2563EB',
+    backgroundColor: BradColors.bleuBrad,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -365,10 +354,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   analyzeButtonDisabled: {
-    backgroundColor: '#D1D5DB',
+    backgroundColor: BradColors.grisMoyen,
   },
   analyzeButtonText: {
-    color: '#fff',
+    color: BradColors.blanc,
     fontSize: 16,
     fontWeight: '600',
   },

@@ -1,0 +1,11 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="simpleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#2563EB;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10B981;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <text x="25" y="155" font-family="Arial, sans-serif" font-weight="900" font-size="120" fill="url(#simpleGradient)">
+    B<tspan font-size="144" dy="-3">.</tspan>
+  </text>
+</svg>

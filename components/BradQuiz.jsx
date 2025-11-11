@@ -14,6 +14,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import { BradColors } from '@/constants/colors';
 
 const QUIZ_DATABASE = [
   {
@@ -326,7 +327,7 @@ export default function BradQuiz() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: BradColors.grisClair,
   },
   contentContainer: {
     padding: 16,
@@ -339,7 +340,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 14,
-    color: '#6B7280',
+    color: BradColors.text.secondary,
   },
   statsGrid: {
     flexDirection: 'row',
@@ -364,7 +365,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: BradColors.blanc,
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
