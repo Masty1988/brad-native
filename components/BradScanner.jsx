@@ -16,6 +16,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import * as WebBrowser from 'expo-web-browser'; // ← AJOUTE CETTE LIGNE
 import { analyzeMessage } from '../utils/scamDetector';
 import { BradColors, getRiskColor, getRiskBackground } from '@/constants/colors';
 
@@ -78,6 +79,13 @@ export default function BradScanner() {
     if (score >= 20) return 'PRUDENCE';
     return 'OK';
   };
+  const openCybermalveillance = async () => {
+  try {
+    await WebBrowser.openBrowserAsync('https://www.cybermalveillance.gouv.fr/');
+  } catch (error) {
+    Alert.alert('Erreur', 'Impossible d\'ouvrir le lien');
+  }
+};
 
   return (
     <LinearGradient
@@ -247,14 +255,32 @@ export default function BradScanner() {
 
             {/* Confidence */}
             <View style={styles.confidenceSection}>
-              <Text style={styles.confidenceText}>
+                <Text style={styles.confidenceText}>
                 Niveau de confiance : <Text style={styles.confidenceBold}>{analysis.confidence}</Text>
               </Text>
             </View>
           </View>
         </View>
       )}
-
+        {/*Ressourese section*/}
+            <View style={styles.resourcesSection}>
+              <View style={styles.resourcesHeader}>
+                <Feather name="info" size={18} color="#2563EB" />
+                <Text style={styles.resourcesTitle}>Besoin d'aide ?</Text>
+              </View>
+              <Text style={styles.resourcesDescription}>
+                Pour plus d'informations sur les arnaques et comment vous protéger :
+              </Text>
+              <TouchableOpacity 
+                style={styles.resourceButton}
+                onPress={openCybermalveillance}
+              >
+                <Feather name="external-link" size={16} color="#fff" />
+                <Text style={styles.resourceButtonText}>
+                  Consulter Cybermalveillance.gouv.fr
+                </Text>
+              </TouchableOpacity>
+            </View>
       {/* Footer */}
       <View style={styles.footer}>
         <Text style={styles.footerText}>
@@ -547,4 +573,42 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     textAlign: 'center',
   },
+  resourcesSection: {
+  marginTop: 16,
+  paddingTop: 16,
+  borderTopWidth: 1,
+  borderTopColor: '#E5E7EB',
+},
+resourcesHeader: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 8,
+  marginBottom: 8,
+},
+resourcesTitle: {
+  fontSize: 14,
+  fontWeight: '600',
+  color: '#1F2937',
+},
+resourcesDescription: {
+  fontSize: 13,
+  color: '#6B7280',
+  marginBottom: 12,
+  lineHeight: 18,
+},
+resourceButton: {
+  backgroundColor: '#2563EB',
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 8,
+  paddingVertical: 12,
+  paddingHorizontal: 16,
+  borderRadius: 10,
+},
+resourceButtonText: {
+  color: '#fff',
+  fontSize: 14,
+  fontWeight: '600',
+},
 });
