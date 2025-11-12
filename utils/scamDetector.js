@@ -17,6 +17,11 @@ export const analyzeMessage = (message, phoneNumber = null) => {
       weight: 35,
       description: "Contact via Telegram/WhatsApp suspect"
     },
+    fake_official_caps: {
+      regex: /^\s*[A-Z\s]{3,}\s*:/,
+      weight: 15,
+      description: "Nom d'organisme en MAJUSCULES"
+}
 
     // ========================================
     // PATTERNS URGENCE & MENACE
@@ -37,10 +42,10 @@ export const analyzeMessage = (message, phoneNumber = null) => {
     // PATTERNS LIENS & URLS
     // ========================================
     via_url: {
-      regex: /\bvia\s*[:\-]?\s*(https?:\/\/[^\s]+|[a-z0-9\-]+\.[a-z]{2,})/gi,
-      weight: 20,
+      regex: /\bvia\b.*?(https?:\/\/[^\s]+|[a-z0-9\-\.]+\.[a-z]{2,})/gi,
+      weight: 25,
       description: "Formulation 'via' suspecte"
-    },
+}
 
     links: {
       regex: /https?:\/\/[^\s]+|cliquez ici|clique ici|suivez ce lien|ouvrir le lien/gi,
