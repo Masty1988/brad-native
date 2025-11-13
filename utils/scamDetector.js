@@ -63,11 +63,17 @@ export const analyzeMessage = (message, phoneNumber = null) => {
       weight: 15,
       description: "URL raccourcie suspecte",
     },
-    scam_like_domain: {
-      regex: /\b[a-z0-9]+-[a-z0-9]+\.((info|xyz|io|top|online|site|click))\b/gi,
-      weight: 15,
-      description: "Nom de domaine suspect imitant un organisme officiel",
+    fake_official_domain: {
+      regex: /(ameli|impots?|caf|cpam|securite-sociale|carte-vitale|assurance-maladie)[a-z0-9\-]*\.(com|net|info|org|xyz)/gi,
+      weight: 35,
+      description: "Domaine usurpant un organisme officiel français"
     },
+    scam_like_domain: {
+      regex: /\b[a-z0-9]+-[a-z0-9]+(-[a-z0-9]+)*\.(com|net|info|xyz|io|top|online|site|click)\b/gi,
+      weight: 15,
+      description: "Nom de domaine suspect avec tirets"
+    },
+    
     robot_like_pattern: {
       regex: /\b[a-f0-9]{16,}\b/gi,
       weight: 30,
