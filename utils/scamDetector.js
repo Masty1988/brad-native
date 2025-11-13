@@ -64,26 +64,30 @@ export const analyzeMessage = (message, phoneNumber = null) => {
       description: "URL raccourcie suspecte",
     },
     fake_official_domain: {
-      regex: /(ameli|impots?|caf|cpam|securite-sociale|carte-vitale|assurance-maladie)[a-z0-9\-]*\.(com|net|info|org|xyz)/gi,
+      regex:
+        /(ameli|impots?|caf|cpam|securite|sante|assurance|carte-vitale|formulaire)[a-z0-9\-]*\.(com|net|info|org|xyz|top)/gi,
       weight: 35,
-      description: "Domaine usurpant un organisme officiel français"
+      description: "Domaine suspect imitant administration française",
     },
     fake_subdomain_structure: {
-      regex: /(centre-?tri|centre-?livraison|suivi-?colis|expediteur)[a-z0-9\-]*\.(colissimo|chronopost|laposte)\./gi,
+      regex:
+        /(centre-?tri|centre-?livraison|suivi-?colis|point-?relais|expediteur|depot)[a-z0-9\-]*[\-\.](colissimo|chronopost|laposte|dhl|ups)/gi,
       weight: 35,
-      description: "Structure de sous-domaine typique d'arnaque"
+      description: "Structure de domaine imitant un transporteur",
     },
     fake_international_tld: {
-      regex: /(colissimo|chronopost|laposte|ameli|impots|caf)\.[a-z0-9\-]*\.(de|ru|cn|br|pl)/gi,
+      regex:
+        /(colissimo|chronopost|laposte|ameli|impots|caf)[a-z0-9\-]*\.(de|ru|cn|br|pl|it|es)/gi,
       weight: 40,
-      description: "Service français avec TLD étranger (très suspect)"
+      description: "Service français avec TLD étranger suspect",
     },
     scam_like_domain: {
-      regex: /\b[a-z0-9]+-[a-z0-9]+(-[a-z0-9]+)*\.(com|net|info|xyz|io|top|online|site|click)\b/gi,
+      regex:
+        /\b[a-z0-9]+-[a-z0-9]+(-[a-z0-9]+)*\.(com|net|info|xyz|io|top|online|site|click)\b/gi,
       weight: 15,
-      description: "Nom de domaine suspect avec tirets"
+      description: "Nom de domaine suspect avec tirets",
     },
-    
+
     robot_like_pattern: {
       regex: /\b[a-f0-9]{16,}\b/gi,
       weight: 30,
@@ -113,11 +117,12 @@ export const analyzeMessage = (message, phoneNumber = null) => {
     // ========================================
     // PATTERNS USURPATION D'IDENTITÉ
     // ========================================
-      impersonation: {
-        regex: /(ameli|impôts|caf|cpam).{0,50}(expiré|bloqué|suspendu|vérifi|cliqu)/gi,
-        weight: 30,
-        description: "Usurpation avec action suspecte"
-},
+    impersonation: {
+      regex:
+        /(ameli|impôts|caf|cpam).{0,50}(expiré|bloqué|suspendu|vérifi|cliqu)/gi,
+      weight: 30,
+      description: "Usurpation avec action suspecte",
+    },
 
     anonymous_delivery: {
       regex:
@@ -132,10 +137,10 @@ export const analyzeMessage = (message, phoneNumber = null) => {
       weight: 24,
       description: "Usurpation identité familiale",
     },
-      legitimate_mention: {
-        regex: /(chronopost|colissimo|dhl).{0,30}(livr|colis|paquet)/gi,
-        weight: -10,
-        description: "Mention légitime transporteur"
+    legitimate_mention: {
+      regex: /(chronopost|colissimo|dhl).{0,30}(livr|colis|paquet)/gi,
+      weight: -10,
+      description: "Mention légitime transporteur",
     },
 
     // ========================================
@@ -204,32 +209,40 @@ export const analyzeMessage = (message, phoneNumber = null) => {
       weight: 21,
       description: "Faux support technique",
     },
-     // ========================================
+    // ========================================
     // PATTERNS LÉGITIMITÉ (NOUVEAUX)
     // ========================================
     legitimate_tracking: {
-      regex: /numéro de suivi|code de suivi|tracking.*[A-Z0-9]{10,}/gi,
+      regex:
+        /numéro de suivi|code de suivi|tracking|colis\s+[A-Z0-9]{6,}|code\s+\d{6}/gi,
       weight: -15,
-      description: "✅ Numéro de suivi légitime"
+      description: "✅ Numéro de suivi ou code retrait légitime",
+    },
+    legitimate_pickup_point: {
+      regex:
+        /(locker|point relais|relais colis|bureau de poste).{0,40}(code|retirez|disponible)/gi,
+      weight: -15,
+      description: "✅ Notification point de retrait légitime",
     },
 
     legitimate_appointment: {
       regex: /rendez-vous (confirmé|prévu)|prise de rendez-vous/gi,
       weight: -10,
-      description: "✅ Rendez-vous légitime"
+      description: "✅ Rendez-vous légitime",
     },
 
     legitimate_delivery_notif: {
-      regex: /(votre colis|votre commande).{0,30}(arrivera|sera livré|en cours)/gi,
+      regex:
+        /(votre colis|votre commande).{0,30}(arrivera|sera livré|en cours)/gi,
       weight: -10,
-      description: "✅ Notification livraison normale"
+      description: "✅ Notification livraison normale",
     },
 
     has_real_company_contact: {
       regex: /service client.*0[1-9]\d{8}|nous contacter au 0[1-9]/gi,
       weight: -15,
-      description: "✅ Coordonnées service client"
-    }
+      description: "✅ Coordonnées service client",
+    },
   };
 
   let score = 0;
@@ -372,24 +385,41 @@ export const analyzeMessage = (message, phoneNumber = null) => {
     score -= 15; // Réduit la suspicion
     reasons.push("✅ Domaine officiel détecté");
   }
-// Liste BLANCHE étendue de domaines officiels
+  // Liste BLANCHE étendue de domaines officiels
   const trustedDomains = [
-    'laposte.fr', 'chronopost.fr', 'colissimo.fr',
-    'amazon.fr', 'amazon.com',
-    'apple.com', 'icloud.com',
-    'ameli.fr', 'impots.gouv.fr', 'service-public.fr',
-    'caf.fr', 'pole-emploi.fr',
-    'bnpparibas.net', 'creditagricole.fr', 'societegenerale.fr',
-    'orange.fr', 'free.fr', 'sfr.fr', 'bouyguestelecom.fr'
+    "mrcolis.fr",
+    "laposte.fr",
+    "chronopost.fr",
+    "colissimo.fr",
+    "amazon.fr",
+    "amazon.com",
+    "apple.com",
+    "icloud.com",
+    "ameli.fr",
+    "impots.gouv.fr",
+    "service-public.fr",
+    "caf.fr",
+    "pole-emploi.fr",
+    "bnpparibas.net",
+    "creditagricole.fr",
+    "societegenerale.fr",
+    "orange.fr",
+    "free.fr",
+    "sfr.fr",
+    "bouyguestelecom.fr",
   ];
 
   // Vérifier domaines de confiance
   const domainMatches = message.match(/https?:\/\/([a-z0-9\-\.]+)/gi);
   if (domainMatches) {
-    domainMatches.forEach(url => {
-      const domain = url.replace(/https?:\/\/(www\.)?/, '').split('/')[0];
-      
-      if (trustedDomains.some(trusted => domain === trusted || domain.endsWith('.' + trusted))) { {
+    domainMatches.forEach((url) => {
+      const domain = url.replace(/https?:\/\/(www\.)?/, "").split("/")[0];
+
+      if (
+        trustedDomains.some(
+          (trusted) => domain === trusted || domain.endsWith("." + trusted)
+        )
+      ) {
         score -= 20;
         reasons.push(`✅ Domaine officiel: ${domain}`);
       }
@@ -415,17 +445,23 @@ export const analyzeMessage = (message, phoneNumber = null) => {
     reasons.push("Plusieurs liens dans le message");
   }
 
-   // ========================================
+  // ========================================
   // DÉTECTION COMBOS DANGEREUX
   // ========================================
 
-  const hasUrgency = redFlags.some(r => r.type.includes('urgency'));
-  const hasMoney = redFlags.some(r => r.type === 'money' || r.type === 'easy_money');
-  const hasLink = redFlags.some(r => r.type === 'links' || r.type === 'via_url');
-  const hasSuspiciousDomain = redFlags.some(r => r.type === 'scam_like_domain');
-  const hasImpersonation = redFlags.some(r => r.type === 'impersonation');
-  const hasTelegram = redFlags.some(r => r.type === 'telegram_handle');
-  const hasDelivery = redFlags.some(r => r.type === 'delivery_scam');
+  const hasUrgency = redFlags.some((r) => r.type.includes("urgency"));
+  const hasMoney = redFlags.some(
+    (r) => r.type === "money" || r.type === "easy_money"
+  );
+  const hasLink = redFlags.some(
+    (r) => r.type === "links" || r.type === "via_url"
+  );
+  const hasSuspiciousDomain = redFlags.some(
+    (r) => r.type === "scam_like_domain"
+  );
+  const hasImpersonation = redFlags.some((r) => r.type === "impersonation");
+  const hasTelegram = redFlags.some((r) => r.type === "telegram_handle");
+  const hasDelivery = redFlags.some((r) => r.type === "delivery_scam");
 
   // COMBO 1 : Urgence + Usurpation + Domaine suspect
   if (hasUrgency && hasImpersonation && hasSuspiciousDomain) {
@@ -434,7 +470,7 @@ export const analyzeMessage = (message, phoneNumber = null) => {
     criticalWarnings.push({
       type: "PHISHING_ATTEMPT",
       message: "🚨 Tentative de phishing détectée !",
-      action: "ARNAQUE quasi-certaine. Ne cliquez sur RIEN."
+      action: "ARNAQUE quasi-certaine. Ne cliquez sur RIEN.",
     });
   }
 
@@ -445,7 +481,7 @@ export const analyzeMessage = (message, phoneNumber = null) => {
     criticalWarnings.push({
       type: "JOB_SCAM",
       message: "⚠️ Arnaque à l'emploi fictif classique !",
-      action: "Aucune entreprise légitime ne recrute par Telegram."
+      action: "Aucune entreprise légitime ne recrute par Telegram.",
     });
   }
 
@@ -458,10 +494,10 @@ export const analyzeMessage = (message, phoneNumber = null) => {
     criticalWarnings.push({
       type: "FAKE_DELIVERY",
       message: "⚠️ Arnaque au faux colis !",
-      action: "Les transporteurs ne demandent JAMAIS de paiement par SMS."
+      action: "Les transporteurs ne demandent JAMAIS de paiement par SMS.",
     });
   }
-      // COMBO 4 : Urgence + Argent + Lien (garde l'ancien aussi)
+  // COMBO 4 : Urgence + Argent + Lien (garde l'ancien aussi)
   if (hasUrgency && hasMoney && hasLink) {
     score += 20;
     reasons.push("🚨 COMBO : Urgence + Argent + Lien");
