@@ -68,6 +68,16 @@ export const analyzeMessage = (message, phoneNumber = null) => {
       weight: 35,
       description: "Domaine usurpant un organisme officiel français"
     },
+    fake_subdomain_structure: {
+      regex: /(centre-?tri|centre-?livraison|suivi-?colis|expediteur)[a-z0-9\-]*\.(colissimo|chronopost|laposte)\./gi,
+      weight: 35,
+      description: "Structure de sous-domaine typique d'arnaque"
+    },
+    fake_international_tld: {
+      regex: /(colissimo|chronopost|laposte|ameli|impots|caf)\.[a-z0-9\-]*\.(de|ru|cn|br|pl)/gi,
+      weight: 40,
+      description: "Service français avec TLD étranger (très suspect)"
+    },
     scam_like_domain: {
       regex: /\b[a-z0-9]+-[a-z0-9]+(-[a-z0-9]+)*\.(com|net|info|xyz|io|top|online|site|click)\b/gi,
       weight: 15,
@@ -379,7 +389,7 @@ export const analyzeMessage = (message, phoneNumber = null) => {
     domainMatches.forEach(url => {
       const domain = url.replace(/https?:\/\/(www\.)?/, '').split('/')[0];
       
-      if (trustedDomains.some(trusted => domain.includes(trusted))) {
+      if (trustedDomains.some(trusted => domain === trusted || domain.endsWith('.' + trusted))) { {
         score -= 20;
         reasons.push(`✅ Domaine officiel: ${domain}`);
       }
