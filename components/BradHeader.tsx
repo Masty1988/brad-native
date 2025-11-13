@@ -1,15 +1,18 @@
-import { StyleSheet, Text, View } from 'react-native';
 import { BradColors } from '@/constants/colors';
+import { StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import BradLogo from './BradLogo';
 
 export default function BradHeader() {
   return (
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
     <View style={styles.header}>
       <View style={styles.logoContainer}>
         <BradLogo width={120} height={40} />
       </View>
-      <Text style={styles.subtitle}>Votre allié anti-scam</Text>
+      
     </View>
+    </SafeAreaView>
   );
 }
 
