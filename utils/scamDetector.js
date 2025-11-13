@@ -97,12 +97,11 @@ export const analyzeMessage = (message, phoneNumber = null) => {
     // ========================================
     // PATTERNS USURPATION D'IDENTITÉ
     // ========================================
-    impersonation: {
-      regex:
-        /votre banque|votre compte|la poste|colissimo|amazon|netflix|impôts|caf|cpam|sécurité sociale|ameli/gi,
-      weight: 18,
-      description: "Usurpation d'organisme officiel",
-    },
+      impersonation: {
+        regex: /(ameli|impôts|caf|cpam).{0,50}(expiré|bloqué|suspendu|vérifi|cliqu)/gi,
+        weight: 30,
+        description: "Usurpation avec action suspecte"
+},
 
     anonymous_delivery: {
       regex:
@@ -116,6 +115,11 @@ export const analyzeMessage = (message, phoneNumber = null) => {
         /(maman|papa|grand-?mère|grand-?père|c'est moi)|nouveau (numéro|téléphone)|cassé mon (téléphone|portable)/gi,
       weight: 24,
       description: "Usurpation identité familiale",
+    },
+      legitimate_mention: {
+        regex: /(chronopost|colissimo|dhl).{0,30}(livr|colis|paquet)/gi,
+        weight: -10,
+        description: "Mention légitime transporteur"
     },
 
     // ========================================
@@ -184,6 +188,32 @@ export const analyzeMessage = (message, phoneNumber = null) => {
       weight: 21,
       description: "Faux support technique",
     },
+     // ========================================
+    // PATTERNS LÉGITIMITÉ (NOUVEAUX)
+    // ========================================
+    legitimate_tracking: {
+      regex: /numéro de suivi|code de suivi|tracking.*[A-Z0-9]{10,}/gi,
+      weight: -15,
+      description: "✅ Numéro de suivi légitime"
+    },
+
+    legitimate_appointment: {
+      regex: /rendez-vous (confirmé|prévu)|prise de rendez-vous/gi,
+      weight: -10,
+      description: "✅ Rendez-vous légitime"
+    },
+
+    legitimate_delivery_notif: {
+      regex: /(votre colis|votre commande).{0,30}(arrivera|sera livré|en cours)/gi,
+      weight: -10,
+      description: "✅ Notification livraison normale"
+    },
+
+    has_real_company_contact: {
+      regex: /service client.*0[1-9]\d{8}|nous contacter au 0[1-9]/gi,
+      weight: -15,
+      description: "✅ Coordonnées service client"
+    }
   };
 
   let score = 0;
@@ -326,6 +356,29 @@ export const analyzeMessage = (message, phoneNumber = null) => {
     score -= 15; // Réduit la suspicion
     reasons.push("✅ Domaine officiel détecté");
   }
+// Liste BLANCHE étendue de domaines officiels
+  const trustedDomains = [
+    'laposte.fr', 'chronopost.fr', 'colissimo.fr',
+    'amazon.fr', 'amazon.com',
+    'apple.com', 'icloud.com',
+    'ameli.fr', 'impots.gouv.fr', 'service-public.fr',
+    'caf.fr', 'pole-emploi.fr',
+    'bnpparibas.net', 'creditagricole.fr', 'societegenerale.fr',
+    'orange.fr', 'free.fr', 'sfr.fr', 'bouyguestelecom.fr'
+  ];
+
+  // Vérifier domaines de confiance
+  const domainMatches = message.match(/https?:\/\/([a-z0-9\-\.]+)/gi);
+  if (domainMatches) {
+    domainMatches.forEach(url => {
+      const domain = url.replace(/https?:\/\/(www\.)?/, '').split('/')[0];
+      
+      if (trustedDomains.some(trusted => domain.includes(trusted))) {
+        score -= 20;
+        reasons.push(`✅ Domaine officiel: ${domain}`);
+      }
+    });
+  }
 
   // ========================================
   // ANALYSE STRUCTURE DU MESSAGE
@@ -346,39 +399,56 @@ export const analyzeMessage = (message, phoneNumber = null) => {
     reasons.push("Plusieurs liens dans le message");
   }
 
-  // ========================================
+   // ========================================
   // DÉTECTION COMBOS DANGEREUX
   // ========================================
 
-  const hasUrgency = redFlags.some((r) => r.type.includes("urgency"));
-  const hasMoney = redFlags.some(
-    (r) => r.type === "money" || r.type === "easy_money"
-  );
-  const hasLink = redFlags.some(
-    (r) => r.type === "links" || r.type === "via_url"
-  );
-  const hasTelegram = redFlags.some((r) => r.type === "telegram_handle");
+  const hasUrgency = redFlags.some(r => r.type.includes('urgency'));
+  const hasMoney = redFlags.some(r => r.type === 'money' || r.type === 'easy_money');
+  const hasLink = redFlags.some(r => r.type === 'links' || r.type === 'via_url');
+  const hasSuspiciousDomain = redFlags.some(r => r.type === 'scam_like_domain');
+  const hasImpersonation = redFlags.some(r => r.type === 'impersonation');
+  const hasTelegram = redFlags.some(r => r.type === 'telegram_handle');
+  const hasDelivery = redFlags.some(r => r.type === 'delivery_scam');
 
-  // COMBO 1 : Urgence + Argent + Lien
-  if (hasUrgency && hasMoney && hasLink) {
-    score += 20;
-    reasons.push("🚨 COMBO DANGEREUX : Urgence + Argent + Lien");
+  // COMBO 1 : Urgence + Usurpation + Domaine suspect
+  if (hasUrgency && hasImpersonation && hasSuspiciousDomain) {
+    score += 35;
+    reasons.push("🚨 COMBO CRITIQUE : Urgence + Usurpation + Domaine suspect");
     criticalWarnings.push({
-      type: "DANGEROUS_COMBO",
-      message: "🚨 Combinaison typique d'arnaque !",
-      action: "ARNAQUE quasi-certaine. Supprimez immédiatement.",
+      type: "PHISHING_ATTEMPT",
+      message: "🚨 Tentative de phishing détectée !",
+      action: "ARNAQUE quasi-certaine. Ne cliquez sur RIEN."
     });
   }
 
-  // COMBO 2 : Argent facile + Telegram
+  // COMBO 2 : Argent facile + Contact externe (Telegram/WhatsApp)
   if (hasTelegram && hasMoney) {
-    score += 25;
-    reasons.push("🚨 COMBO : Argent + Contact Telegram");
+    score += 30;
+    reasons.push("🚨 COMBO : Arnaque emploi fictif");
     criticalWarnings.push({
       type: "JOB_SCAM",
       message: "⚠️ Arnaque à l'emploi fictif classique !",
-      action: "Aucune entreprise légitime ne recrute par Telegram.",
+      action: "Aucune entreprise légitime ne recrute par Telegram."
     });
+  }
+
+  // COMBO 3 : Livraison + Paiement (arnaque colis très courante)
+  const hasPaymentRequest = /pay|réglez|payer|frais|€/.test(message);
+
+  if (hasDelivery && hasPaymentRequest && hasLink) {
+    score += 30;
+    reasons.push("🚨 COMBO : Fausse livraison avec paiement");
+    criticalWarnings.push({
+      type: "FAKE_DELIVERY",
+      message: "⚠️ Arnaque au faux colis !",
+      action: "Les transporteurs ne demandent JAMAIS de paiement par SMS."
+    });
+  }
+      // COMBO 4 : Urgence + Argent + Lien (garde l'ancien aussi)
+  if (hasUrgency && hasMoney && hasLink) {
+    score += 20;
+    reasons.push("🚨 COMBO : Urgence + Argent + Lien");
   }
 
   // ========================================
