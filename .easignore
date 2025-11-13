@@ -1,0 +1,28 @@
+# EAS Build ignore file
+# Ignore large or unnecessary files during build
+
+# Node modules (will be reinstalled)
+node_modules/
+
+# Local build artifacts
+.expo/
+dist/
+web-build/
+
+# IDE and system files
+.vscode/
+.idea/
+.DS_Store
+*.log
+
+# Git files
+.git/
+
+# Backup files
+*.backup
+*.orig
+
+# Test files (if not needed for build)
+__tests__/
+*.test.js
+*.spec.js
