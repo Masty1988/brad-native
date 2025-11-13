@@ -63,6 +63,12 @@ export const analyzeMessage = (message, phoneNumber = null) => {
       weight: 15,
       description: "URL raccourcie suspecte",
     },
+    scam_like_domain: {
+      regex: /\b[a-z0-9]+-[a-z0-9]+\.((info|xyz|io|top|online|site|click))\b/gi,
+      weight: 15,
+      description: "Nom de domaine suspect imitant un organisme officiel",
+      },
+
 
     // ========================================
     // PATTERNS ARGENT & PAIEMENT
