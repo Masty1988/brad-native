@@ -67,8 +67,12 @@ export const analyzeMessage = (message, phoneNumber = null) => {
       regex: /\b[a-z0-9]+-[a-z0-9]+\.((info|xyz|io|top|online|site|click))\b/gi,
       weight: 15,
       description: "Nom de domaine suspect imitant un organisme officiel",
-      },
-
+    },
+    robot_like_pattern: {
+      regex: /\b[a-f0-9]{16,}\b/gi,
+      weight: 30,
+      description: "Pattern de type robot / code hash détecté",
+    },
 
     // ========================================
     // PATTERNS ARGENT & PAIEMENT
