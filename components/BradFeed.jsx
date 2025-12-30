@@ -1,761 +1,397 @@
-// ============================================
-// components/BradFeed.jsx
-// Module Feed Arnaques du Jour - React Native
-// ============================================
-
-import { Feather } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
-import {
-    Dimensions,
-    Modal,
-    ScrollView,
-    Share,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
-} from 'react-native';
 import { BradColors } from '@/constants/colors';
+import { Feather } from '@expo/vector-icons';
+import { useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const { width } = Dimensions.get('window');
-const isMobile = width < 768;
-
-const SCAM_FEED = [
+const ARNAQUES_DATA = [
   {
     id: 1,
-    date: '2025-11-04',
-    title: "Faux SMS Chronopost avec repérage domicile",
-    category: "Livraison",
-    severity: "critique",
-    example: "Bonjour, je suis votre livreur Chronopost. Vous êtes chez vous en ce moment ? Je suis devant votre porte.",
-    dangerLevel: 95,
-    victims: 1247,
-    explanation: "Cette arnaque combine phishing ET repérage pour cambriolage. Les scammers vérifient si vous êtes absent pour préparer un vol.",
-    whatToDo: [
-      "Ne JAMAIS répondre à ce type de question",
-      "Les vrais livreurs sonnent, ils n'envoient pas de SMS",
-      "Signalez au 33700 (service anti-spam)",
-      "Si répété : contactez la police"
+    icon: '📦',
+    title: 'Arnaque au colis',
+    description: 'Faux SMS de livraison demandant des frais',
+    details: 'Les escrocs envoient des SMS type : "Votre colis rencontre un problème d\'affranchissement. Veuillez régler 2,99€ sous 24h via ce lien : suivi-poste-info.com". Le but est de voler vos numéros de carte bancaire.',
+    tips: [
+      'Les URL officielles finissent par .fr (laposte.fr, chronopost.fr)',
+      'Un transporteur n\'utilise jamais un numéro de portable (06/07)',
+      'Ne payez jamais de frais "sur le pouce" via un lien SMS',
+      'En cas de doute, copiez le numéro de suivi sur le site officiel',
     ],
-    redFlags: [
-      "Question 'êtes-vous chez vous ?'",
-      "Numéro mobile (pas fixe professionnel)",
-      "Pas de numéro de colis mentionné"
-    ],
-    trending: true
+    danger: 'high',
   },
   {
     id: 2,
-    date: '2025-11-03',
-    title: "Phishing CPAM : Faux remboursement santé",
-    category: "Sécurité sociale",
-    severity: "élevé",
-    example: "CPAM : Vous avez droit à un remboursement de 87,50€. Validez vos données sur cpam-rembours.com avant le 05/11",
-    dangerLevel: 85,
-    victims: 892,
-    explanation: "Site frauduleux qui vole vos données CPAM + carte vitale. Le vrai site est ameli.fr uniquement.",
-    whatToDo: [
-      "Ne JAMAIS cliquer sur un lien CPAM par SMS",
-      "Connectez-vous sur ameli.fr directement",
-      "La CPAM ne demande JAMAIS de confirmation par SMS",
-      "Vérifiez sur votre compte Ameli officiel"
+    icon: '👨‍👩‍👧',
+    title: 'Arnaque "Coucou Maman"',
+    description: 'Usurpation d\'identité d\'un proche',
+    details: 'Vous recevez : "Coucou maman/papa, mon téléphone est cassé/tombé dans l\'eau. C\'est mon numéro provisoire. Envoie-moi un message sur WhatsApp au 07...". L\'escroc prétextera ensuite une urgence financière pour vous faire payer.',
+    tips: [
+      'Appelez TOUJOURS l\'ancien numéro pour vérifier',
+      'Demandez une note vocale : "Envoie-moi un vocal pour prouver que c\'est toi"',
+      'Posez une question personnelle intime (nom de l\'animal de compagnie...)',
+      'Ne faites aucun virement instantané dans la panique',
     ],
-    redFlags: [
-      "Domaine suspect (pas ameli.fr)",
-      "Urgence artificielle (date limite)",
-      "Montant précis pour crédibilité"
-    ],
-    trending: false
+    danger: 'high',
   },
   {
     id: 3,
-    date: '2025-11-02',
-    title: "Arnaque 'Maman nouveau numéro' avec urgence",
-    category: "Famille",
-    severity: "critique",
-    example: "Maman c'est moi, j'ai cassé mon téléphone. Nouveau numéro : +234... J'ai eu un accident, peux-tu m'envoyer 300€ urgent pour l'hôpital ?",
-    dangerLevel: 92,
-    victims: 654,
-    explanation: "Arnaque émotionnelle ultra-répandue. Les scammers exploitent le lien familial pour créer la panique et obtenir un virement rapide.",
-    whatToDo: [
-      "TOUJOURS appeler l'ancien numéro en premier",
-      "Ne jamais envoyer d'argent sans vérification vocale",
-      "Posez une question que seul votre proche connaît",
-      "Prévenez votre famille de cette technique"
+    icon: '🏛️',
+    title: 'Fausse administration',
+    description: 'Ameli, Impôts, CAF, ANTAI...',
+    details: 'SMS/Email type : "AMELI : Un remboursement de 34,90€ est en attente. Confirmez vos coordonnées." ou "ANTAI : Vous avez un retard de paiement sur votre dossier 4921...". Le site imite parfaitement le site officiel.',
+    tips: [
+      'L\'État n\'envoie jamais de lien de paiement direct par SMS',
+      'Les sites officiels finissent OBLIGATOIREMENT par .gouv.fr',
+      'L\'administration ne demande jamais vos infos bancaires par message',
+      'Connectez-vous via l\'application officielle, jamais via le lien reçu',
     ],
-    redFlags: [
-      "Numéro étranger (+234 Nigeria typique)",
-      "Urgence médicale/argent combinés",
-      "Pas de possibilité d'appel ('téléphone cassé')"
+    danger: 'high',
+  },
+  {
+    id: 4,
+    icon: '🏦',
+    title: 'Faux conseiller bancaire',
+    description: 'Spoofing du numéro de votre banque',
+    details: 'Votre téléphone affiche le VRAI numéro de votre banque. Le faux conseiller vous dit : "Des mouvements suspects de 900€ sont en cours à l\'étranger. Nous devons annuler l\'opération". Il vous demande de valider une notif sur votre mobile.',
+    tips: [
+      'Raccrochez et rappelez votre banque vous-même',
+      'Votre banque ne vous demandera JAMAIS de valider une opération pour l\'annuler',
+      'Une validation mobile = Un paiement autorisé (jamais un remboursement)',
+      'Ne donnez jamais vos codes reçus par SMS à voix haute',
     ],
-    trending: true
-  }
+    danger: 'high',
+  },
+  {
+    id: 5,
+    icon: '💼',
+    title: 'Arnaque à l\'emploi',
+    description: 'Offres trop belles pour être vraies',
+    details: 'Message WhatsApp/Telegram : "Bonjour, nous recrutons à temps partiel. Gagnez 200€ à 800€/jour en likant des vidéos YouTube/TikTok". Après quelques tâches payées quelques euros, on vous demande de payer pour "débloquer" le niveau supérieur.',
+    tips: [
+      'Aucun recruteur sérieux ne démarche par messagerie cryptée (Telegram)',
+      'Si on vous demande de payer pour travailler, c\'est une arnaque',
+      'Vérifiez l\'email du recruteur (Gmail/Hotmail = Suspect)',
+      'L\'argent facile sans compétence n\'existe pas',
+    ],
+    danger: 'medium',
+  },
+  {
+    id: 6,
+    icon: '🎁',
+    title: 'Faux concours / Cadeaux',
+    description: 'iPhone gratuit, tirage au sort...',
+    details: 'Email ou Pop-up : "Félicitations ! Vous avez été tiré au sort pour gagner un iPhone 15 ou un Dyson. Réglez juste les frais de port de 1,95€". En payant, vous vous abonnez en réalité à un service caché facturé 50€/mois.',
+    tips: [
+      'Si c\'est trop beau pour être vrai, c\'est faux',
+      'Lisez les petites lignes en bas de page (conditions d\'abonnement)',
+      'On ne paie jamais pour recevoir un "cadeau"',
+      'Surveillez vos relevés bancaires pour détecter les abonnements cachés',
+    ],
+    danger: 'medium',
+  },
+  {
+    id: 7,
+    icon: '💻',
+    title: 'Faux support Microsoft',
+    description: 'PC bloqué, fausse alerte virus',
+    details: 'Une page bloque votre navigateur avec une alarme sonore : "ALERTE VIRUS ! Votre ordinateur est bloqué. Appelez le support Microsoft au 01...". Au téléphone, l\'escroc prend le contrôle de votre PC et vous facture un dépannage fictif.',
+    tips: [
+      'Microsoft/Apple n\'affichent jamais de numéro de téléphone en alerte',
+      'Ne jamais appeler le numéro affiché sur une pop-up',
+      'Faites "Ctrl + Alt + Suppr" ou redémarrez le PC pour fermer la page',
+      'N\'installez JAMAIS de logiciel de contrôle (AnyDesk, TeamViewer)',
+    ],
+    danger: 'high',
+  },
+  {
+    id: 8,
+    icon: '🏠',
+    title: 'Repérage cambriolage',
+    description: 'Questions indiscrètes sur vos horaires',
+    details: 'Un démarcheur (faux éboueur, faux agent EDF, sondage) sonne chez vous. Il pose des questions bizarres : "Vous travaillez le matin ?", "Vous partez en vacances cet été ?", "Combien de personnes vivent ici ?".',
+    tips: [
+      'Ne donnez jamais vos horaires ou dates de vacances',
+      'Un vrai professionnel a une carte professionnelle officielle',
+      'Ne laissez pas entrer d\'inconnus pour un "verre d\'eau" ou un "service"',
+      'Signalez tout comportement suspect à la police (17)',
+    ],
+    danger: 'high',
+  },
+  {
+    id: 9,
+    icon: '🎓',
+    title: 'Arnaque au CPF',
+    description: 'Vol de vos crédits de formation',
+    details: 'SMS/Appel : "Vos droits à la formation (2000€) vont expirer. Cliquez ici pour les réclamer". L\'escroc veut récupérer vos identifiants France Connect pour vider votre compte CPF en achetant des formations bidons.',
+    tips: [
+      'Vos droits CPF n\'expirent JAMAIS',
+      'Il n\'y a qu\'un seul site officiel : moncompteformation.gouv.fr',
+      'Ne donnez jamais votre numéro de Sécurité Sociale par téléphone',
+      'Raccrochez au nez des démarchages téléphoniques sur le CPF',
+    ],
+    danger: 'medium',
+  },
+  {
+    id: 10,
+    icon: '💔',
+    title: 'Arnaque aux sentiments',
+    description: 'Faux amoureux en ligne (Brouteurs)',
+    details: 'Une personne séduisante vous contacte sur les réseaux sociaux. Après des semaines de discussion virtuelle passionnée, elle a un problème : "Je suis bloqué à la douane", "Mon fils est malade", et demande de l\'argent via coupons PCS ou virement.',
+    tips: [
+      'N\'envoyez JAMAIS d\'argent à quelqu\'un que vous n\'avez jamais vu',
+      'Faites une recherche d\'image inversée sur Google avec sa photo',
+      'Refusez les excuses de caméra cassée pour éviter les appels vidéo',
+      'Méfiez-vous des profils trop parfaits ou vivant à l\'étranger',
+    ],
+    danger: 'high',
+  },
+  {
+    id: 11,
+    icon: '👗',
+    title: 'Arnaque Vinted / Leboncoin',
+    description: 'Faux paiement sécurisé',
+    details: 'Un acheteur veut votre article mais refuse le paiement intégré. Il propose Paylib/PayPal et vous envoie un lien SMS : "Fonds reçus, cliquez pour accepter". Le lien demande vos codes de carte bancaire pour soi-disant "créditer" votre compte.',
+    tips: [
+      'Restez TOUJOURS dans la messagerie de l\'application',
+      'On n\'a jamais besoin de sa carte bancaire pour RECEVOIR de l\'argent',
+      'Refusez de communiquer votre email ou numéro de téléphone',
+      'Méfiez-vous des acheteurs qui paient plus cher que le prix',
+    ],
+    danger: 'medium',
+  },
+  {
+    id: 12,
+    icon: '📱',
+    title: 'SIM Swapping',
+    description: 'Vol de votre numéro de téléphone',
+    details: 'Vous perdez soudainement tout réseau mobile. L\'escroc a contacté votre opérateur en se faisant passer pour vous et a transféré votre numéro sur SA carte SIM. Il reçoit désormais vos codes de validation bancaire (SMS 2FA).',
+    tips: [
+      'Si le réseau coupe longtemps, contactez votre opérateur d\'urgence',
+      'Utilisez des applications d\'authentification (Google Auth) plutôt que les SMS',
+      'Limitez les infos personnelles publiques sur les réseaux sociaux',
+      'Activez un code PIN auprès de votre opérateur pour toute modif',
+    ],
+    danger: 'high',
+  },
+  {
+    id: 13,
+    icon: '📺',
+    title: 'Phishing Netflix / Amazon',
+    description: 'Faux problème de facturation',
+    details: 'Email alarmiste : "Votre abonnement Netflix/Prime est suspendu. Dernier paiement refusé". Le lien mène vers une fausse page de connexion pour voler vos identifiants et votre carte bancaire.',
+    tips: [
+      'Regardez l\'adresse email de l\'expéditeur (souvent bizarre)',
+      'Ne cliquez pas. Allez sur l\'appli officielle pour vérifier l\'état du compte',
+      'Les fautes d\'orthographe sont souvent un indice',
+      'Un service ne vous demande jamais votre mot de passe par mail',
+    ],
+    danger: 'medium',
+  },
+  {
+    id: 14,
+    icon: '🛡️',
+    title: 'Faux Antivirus',
+    description: 'Abonnement caché / Renouvellement',
+    details: 'Email reçu : "Votre abonnement McAfee/Norton a expiré aujourd\'hui. Votre compte sera débité de 399€ pour le renouvellement auto". Paniqué, vous appelez le numéro fourni pour annuler, et on vous demande vos infos bancaires pour "rembourser".',
+    tips: [
+      'C\'est du spam. Vérifiez vos prélèvements réels avant de paniquer',
+      'Ne jamais appeler un numéro trouvé dans un email non sollicité',
+      'Les vrais antivirus ne menacent pas de prélèvements géants',
+      'Marquez l\'email comme spam et supprimez-le',
+    ],
+    danger: 'low',
+  },
 ];
 
 export default function BradFeed() {
-  const [selectedScam, setSelectedScam] = useState(SCAM_FEED[0]);
-  const [bookmarked, setBookmarked] = useState([]);
-  const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [expandedId, setExpandedId] = useState(null);
 
-  useEffect(() => {
-    loadBookmarks();
-  }, []);
-
-  const loadBookmarks = async () => {
-    try {
-      const saved = await AsyncStorage.getItem('brad_bookmarked_scams');
-      if (saved) setBookmarked(JSON.parse(saved));
-    } catch (error) {
-      console.error('Error loading bookmarks:', error);
-    }
-  };
-
-  const toggleBookmark = async (scamId) => {
-    try {
-      const newBookmarks = bookmarked.includes(scamId)
-        ? bookmarked.filter(id => id !== scamId)
-        : [...bookmarked, scamId];
-      
-      setBookmarked(newBookmarks);
-      await AsyncStorage.setItem('brad_bookmarked_scams', JSON.stringify(newBookmarks));
-    } catch (error) {
-      console.error('Error saving bookmark:', error);
-    }
-  };
-
-  const shareScam = async (scam) => {
-    try {
-      await Share.share({
-        title: `Alerte Brad. : ${scam.title}`,
-        message: `⚠️ ARNAQUE DÉTECTÉE par Brad.\n\n${scam.title}\n\nExemple : "${scam.example}"\n\nNe tombez pas dans le piège !`
-      });
-    } catch (error) {
-      console.error('Error sharing:', error);
-    }
-  };
-
-  const getSeverityColor = (severity) => {
-    switch(severity) {
-      case 'critique': return '#EF4444';
-      case 'élevé': return '#F97316';
-      case 'moyen': return '#EAB308';
+  const getDangerColor = (danger) => {
+    switch (danger) {
+      case 'high': return '#EF4444';
+      case 'medium': return '#F59E0B';
       default: return '#6B7280';
     }
   };
 
+  const toggleExpand = (id) => {
+    setExpandedId(expandedId === id ? null : id);
+  };
+
   return (
-    <View style={styles.container}>
-      {/* Burger menu mobile en haut à gauche */}
-      {isMobile && (
-        <View style={styles.mobileHeader}>
-          <TouchableOpacity
-            style={styles.burgerButton}
-            onPress={() => setSidebarVisible(true)}
-          >
-            <Feather name="menu" size={24} color={BradColors.blanc} />
-          </TouchableOpacity>
-          <Text style={styles.mobileHeaderTitle} numberOfLines={1}>
-            {selectedScam.category}
-          </Text>
-        </View>
-      )}
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <View style={styles.header}>
+        <Text style={styles.title}>📚 Types d'arnaques</Text>
+        <Text style={styles.subtitle}>
+          Apprenez à reconnaître les techniques des escrocs
+        </Text>
+      </View>
 
-      {/* Sidebar - Desktop uniquement */}
-      {!isMobile && (
-        <ScrollView style={styles.sidebar} contentContainerStyle={styles.sidebarContent}>
-          <View style={styles.sidebarHeader}>
-            <Feather name="alert-triangle" size={20} color="#EF4444" />
-            <Text style={styles.sidebarTitle}>Arnaques récentes</Text>
-          </View>
-
-          {SCAM_FEED.map((scam) => (
-            <TouchableOpacity
-              key={scam.id}
-              style={[
-                styles.scamItem,
-                selectedScam.id === scam.id && styles.scamItemActive
-              ]}
-              onPress={() => setSelectedScam(scam)}
-            >
-              <View style={styles.scamItemHeader}>
-                <Text style={styles.scamCategory}>{scam.category}</Text>
-                {scam.trending && (
-                  <Feather name="trending-up" size={16} color="#EF4444" />
-                )}
-              </View>
-              <Text style={styles.scamItemTitle} numberOfLines={2}>{scam.title}</Text>
-              <View style={styles.scamItemFooter}>
-                <View style={styles.scamItemDate}>
-                  <Feather name="clock" size={12} color="#6B7280" />
-                  <Text style={styles.scamItemDateText}>
-                    {new Date(scam.date).toLocaleDateString('fr-FR')}
-                  </Text>
-                </View>
-                <View style={[styles.scamItemBadge, { backgroundColor: getSeverityColor(scam.severity) }]}>
-                  <Text style={styles.scamItemBadgeText}>{scam.dangerLevel}%</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      )}
-
-      {/* Modal pour sélection mobile */}
-      <Modal
-        visible={sidebarVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setSidebarVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Choisir une arnaque</Text>
-              <TouchableOpacity onPress={() => setSidebarVisible(false)}>
-                <Feather name="x" size={24} color={BradColors.text.primary} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView>
-              {SCAM_FEED.map((scam) => (
-                <TouchableOpacity
-                  key={scam.id}
-                  style={[
-                    styles.modalItem,
-                    selectedScam.id === scam.id && styles.modalItemActive
-                  ]}
-                  onPress={() => {
-                    setSelectedScam(scam);
-                    setSidebarVisible(false);
-                  }}
-                >
-                  <View style={styles.modalItemHeader}>
-                    <Text style={styles.scamCategory}>{scam.category}</Text>
-                    {scam.trending && (
-                      <Feather name="trending-up" size={16} color="#EF4444" />
-                    )}
-                  </View>
-                  <Text style={styles.modalItemTitle}>{scam.title}</Text>
-                  <View style={[styles.scamItemBadge, { backgroundColor: getSeverityColor(scam.severity) }]}>
-                    <Text style={styles.scamItemBadgeText}>{scam.dangerLevel}%</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Main Content - Détail */}
-      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
-        <View style={styles.card}>
-          {/* Header */}
+      {ARNAQUES_DATA.map((arnaque) => (
+        <TouchableOpacity
+          key={arnaque.id}
+          style={styles.card}
+          onPress={() => toggleExpand(arnaque.id)}
+          activeOpacity={0.7}
+        >
           <View style={styles.cardHeader}>
-            <View style={styles.cardHeaderLeft}>
-              <View style={styles.categoryBadge}>
-                <Text style={styles.categoryText}>{selectedScam.category}</Text>
+            <Text style={styles.cardIcon}>{arnaque.icon}</Text>
+            <View style={styles.cardTitleContainer}>
+              <Text style={styles.cardTitle}>{arnaque.title}</Text>
+              <Text style={styles.cardDescription}>{arnaque.description}</Text>
+            </View>
+            <View style={[styles.dangerBadge, { backgroundColor: getDangerColor(arnaque.danger) + '20' }]}>
+              <View style={[styles.dangerDot, { backgroundColor: getDangerColor(arnaque.danger) }]} />
+            </View>
+            <Feather 
+              name={expandedId === arnaque.id ? 'chevron-up' : 'chevron-down'} 
+              size={20} 
+              color="#9CA3AF" 
+            />
+          </View>
+
+          {expandedId === arnaque.id && (
+            <View style={styles.cardExpanded}>
+              <Text style={styles.detailsText}>{arnaque.details}</Text>
+              
+              <View style={styles.tipsContainer}>
+                <Text style={styles.tipsTitle}>💡 Comment se protéger :</Text>
+                {arnaque.tips.map((tip, index) => (
+                  <View key={index} style={styles.tipRow}>
+                    <Feather name="check" size={16} color="#10B981" />
+                    <Text style={styles.tipText}>{tip}</Text>
+                  </View>
+                ))}
               </View>
-              {selectedScam.trending && (
-                <View style={styles.trendingBadge}>
-                  <Feather name="trending-up" size={12} color="#EF4444" />
-                  <Text style={styles.trendingText}>Tendance</Text>
-                </View>
-              )}
             </View>
-            <View style={styles.cardHeaderActions}>
-              <TouchableOpacity
-                style={[
-                  styles.iconButton,
-                  bookmarked.includes(selectedScam.id) && styles.iconButtonActive
-                ]}
-                onPress={() => toggleBookmark(selectedScam.id)}
-              >
-                <Feather 
-                  name="bookmark" 
-                  size={20} 
-                  color={bookmarked.includes(selectedScam.id) ? '#fff' : '#6B7280'} 
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.iconButton}
-                onPress={() => shareScam(selectedScam)}
-              >
-                <Feather name="share-2" size={20} color="#6B7280" />
-              </TouchableOpacity>
-            </View>
-          </View>
+          )}
+        </TouchableOpacity>
+      ))}
 
-          <Text style={styles.scamTitle}>{selectedScam.title}</Text>
-
-          <View style={styles.scamMeta}>
-            <View style={styles.metaItem}>
-              <Feather name="clock" size={16} color="#6B7280" />
-              <Text style={styles.metaText}>
-                {new Date(selectedScam.date).toLocaleDateString('fr-FR', { 
-                  weekday: 'long', 
-                  day: 'numeric', 
-                  month: 'long' 
-                })}
-              </Text>
-            </View>
-            <Text style={styles.metaVictims}>{selectedScam.victims} victimes</Text>
-          </View>
-
-          {/* Danger meter */}
-          <View style={styles.dangerMeter}>
-            <View style={styles.dangerMeterHeader}>
-              <Text style={styles.dangerMeterLabel}>Niveau de danger</Text>
-              <Text style={[styles.dangerMeterValue, { color: getSeverityColor(selectedScam.severity) }]}>
-                {selectedScam.dangerLevel}%
-              </Text>
-            </View>
-            <View style={styles.dangerMeterBar}>
-              <View 
-                style={[
-                  styles.dangerMeterFill, 
-                  { 
-                    width: `${selectedScam.dangerLevel}%`,
-                    backgroundColor: getSeverityColor(selectedScam.severity)
-                  }
-                ]} 
-              />
-            </View>
-          </View>
-
-          {/* Example */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Feather name="alert-triangle" size={20} color="#EF4444" />
-              <Text style={styles.sectionTitle}>Exemple de message</Text>
-            </View>
-            <View style={styles.exampleBox}>
-              <Text style={styles.exampleText}>"{selectedScam.example}"</Text>
-            </View>
-          </View>
-
-          {/* Explanation */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>💡 Pourquoi c'est dangereux</Text>
-            <View style={styles.explanationBox}>
-              <Text style={styles.explanationText}>{selectedScam.explanation}</Text>
-            </View>
-          </View>
-
-          {/* Red flags */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>🚩 Signaux d'alerte à repérer</Text>
-            {selectedScam.redFlags.map((flag, idx) => (
-              <View key={idx} style={styles.flagItem}>
-                <Text style={styles.flagIcon}>⚠️</Text>
-                <Text style={styles.flagText}>{flag}</Text>
-              </View>
-            ))}
-          </View>
-
-          {/* What to do */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>✅ Que faire si vous recevez ce message</Text>
-            {selectedScam.whatToDo.map((action, idx) => (
-              <View key={idx} style={styles.actionItem}>
-                <View style={styles.actionNumber}>
-                  <Text style={styles.actionNumberText}>{idx + 1}</Text>
-                </View>
-                <Text style={styles.actionText}>{action}</Text>
-              </View>
-            ))}
-          </View>
-
-          {/* Premium CTA */}
-          <View style={styles.premiumBox}>
-            <Text style={styles.premiumTitle}>🔔 Brad. Premium : Alertes en temps réel</Text>
-            <Text style={styles.premiumText}>
-              Recevez des notifications push dès qu'une nouvelle arnaque est détectée dans votre région
-            </Text>
-            <TouchableOpacity>
-              <Text style={styles.premiumLink}>Activer les alertes (7 jours gratuits) →</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </ScrollView>
-    </View>
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>
+          🛡️ En cas de doute, ne cliquez pas !
+        </Text>
+        <Text style={styles.footerSubtext}>
+          Signalez sur signal-arnaques.com ou au 33700
+        </Text>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: isMobile ? 'column' : 'row',
     backgroundColor: BradColors.grisClair,
   },
-  sidebar: {
-    width: 140,
-    backgroundColor: BradColors.blanc,
-    borderRightWidth: 1,
-    borderRightColor: BradColors.grisMoyen,
-  },
-  sidebarContent: {
-    padding: 8,
-  },
-  sidebarHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-  },
-  sidebarTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#1F2937',
-  },
-  scamItem: {
-    padding: 8,
-    borderRadius: 8,
-    marginBottom: 8,
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
-  },
-  scamItemActive: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#2563EB',
-  },
-  scamItemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  scamCategory: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#6B7280',
-  },
-  scamItemTitle: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  scamItemFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  scamItemDate: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  scamItemDateText: {
-    fontSize: 10,
-    color: '#6B7280',
-  },
-  scamItemBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  scamItemBadgeText: {
-    fontSize: 10,
-    color: '#fff',
-    fontWeight: 'bold',
-  },
   content: {
-    flex: 1,
-  },
-  contentContainer: {
     padding: 16,
+  },
+  header: {
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1F2937',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginTop: 4,
   },
   card: {
-    backgroundColor: BradColors.blanc,
-    borderRadius: 16,
+    backgroundColor: '#fff',
+    borderRadius: 12,
     padding: 16,
+    marginBottom: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   cardHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
+    alignItems: 'center',
   },
-  cardHeaderLeft: {
-    flexDirection: 'row',
-    gap: 8,
+  cardIcon: {
+    fontSize: 32,
+    marginRight: 12,
+  },
+  cardTitleContainer: {
     flex: 1,
   },
-  categoryBadge: {
-    backgroundColor: '#F3F4F6',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  categoryText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#374151',
-  },
-  trendingBadge: {
-    backgroundColor: '#FEE2E2',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  trendingText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#991B1B',
-  },
-  cardHeaderActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  iconButton: {
-    width: 36,
-    height: 36,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconButtonActive: {
-    backgroundColor: '#2563EB',
-  },
-  scamTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 12,
-  },
-  scamMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  metaText: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  metaVictims: {
-    fontSize: 14,
-    color: '#6B7280',
-    fontWeight: '600',
-  },
-  dangerMeter: {
-    marginBottom: 24,
-  },
-  dangerMeterHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  dangerMeterLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-  },
-  dangerMeterValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  dangerMeterBar: {
-    height: 12,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 6,
-    overflow: 'hidden',
-  },
-  dangerMeterFill: {
-    height: '100%',
-    borderRadius: 6,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
-  },
-  sectionTitle: {
+  cardTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 12,
-  },
-  exampleBox: {
-    backgroundColor: '#FEF2F2',
-    padding: 16,
-    borderRadius: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: '#EF4444',
-  },
-  exampleText: {
-    fontSize: 14,
-    color: '#1F2937',
-    fontStyle: 'italic',
-  },
-  explanationBox: {
-    backgroundColor: '#F9FAFB',
-    padding: 16,
-    borderRadius: 12,
-  },
-  explanationText: {
-    fontSize: 14,
-    color: '#374151',
-    lineHeight: 22,
-  },
-  flagItem: {
-    flexDirection: 'row',
-    backgroundColor: '#FEF3C7',
-    padding: 12,
-    borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: '#EAB308',
-    marginBottom: 8,
-    gap: 8,
-  },
-  flagIcon: {
-    fontSize: 16,
-  },
-  flagText: {
-    flex: 1,
-    fontSize: 14,
+    fontWeight: '600',
     color: '#1F2937',
   },
-  actionItem: {
-    flexDirection: 'row',
-    backgroundColor: '#D1FAE5',
-    padding: 12,
-    borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: '#10B981',
-    marginBottom: 8,
-    gap: 12,
+  cardDescription: {
+    fontSize: 13,
+    color: '#6B7280',
+    marginTop: 2,
   },
-  actionNumber: {
+  dangerBadge: {
     width: 24,
     height: 24,
-    backgroundColor: '#10B981',
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: 8,
   },
-  actionNumberText: {
-    color: '#fff',
+  dangerDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  cardExpanded: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
+  detailsText: {
     fontSize: 14,
-    fontWeight: 'bold',
+    color: '#4B5563',
+    lineHeight: 22,
   },
-  actionText: {
+  tipsContainer: {
+    backgroundColor: '#F0FDF4',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 12,
+  },
+  tipsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#065F46',
+    marginBottom: 8,
+  },
+  tipRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 6,
+    gap: 8,
+  },
+  tipText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 13,
+    color: '#047857',
+    lineHeight: 20,
+  },
+  footer: {
+    alignItems: 'center',
+    paddingVertical: 24,
+  },
+  footerText: {
+    fontSize: 16,
+    fontWeight: '600',
     color: '#1F2937',
   },
-  premiumBox: {
-    backgroundColor: '#FAF5FF',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#E9D5FF',
-  },
-  premiumTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#6B21A8',
-    marginBottom: 8,
-  },
-  premiumText: {
-    fontSize: 12,
-    color: '#374151',
-    marginBottom: 12,
-  },
-  premiumLink: {
-    fontSize: 12,
-    color: '#7E22CE',
-    fontWeight: '600',
-  },
-  // Styles mobile
-  mobileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: BradColors.bleuBrad,
-    padding: 12,
-    gap: 12,
-  },
-  burgerButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  mobileHeaderTitle: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '700',
-    color: BradColors.blanc,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    justifyContent: 'flex-start',
-    paddingTop: 60,
-  },
-  modalContent: {
-    backgroundColor: BradColors.blanc,
-    borderRadius: 16,
-    maxHeight: '50%',
-    marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: BradColors.grisMoyen,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: BradColors.text.primary,
-  },
-  modalItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: BradColors.grisMoyen,
-  },
-  modalItemActive: {
-    backgroundColor: '#EFF6FF',
-  },
-  modalItemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  modalItemTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: BradColors.text.primary,
-    marginBottom: 8,
+  footerSubtext: {
+    fontSize: 13,
+    color: '#6B7280',
+    marginTop: 4,
   },
 });
