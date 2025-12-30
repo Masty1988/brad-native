@@ -1,9 +1,9 @@
+import { Feather } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import BradHeader from '@/components/BradHeader';
+import { HapticTab } from '@/components/haptic-tab';
 import { BradColors } from '@/constants/colors';
 
 export default function TabLayout() {
@@ -11,6 +11,7 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: BradColors.bleuBrad,
+        tabBarInactiveTintColor: '#9CA3AF',
         header: () => <BradHeader />,
         tabBarButton: HapticTab,
       }}>
@@ -18,21 +19,21 @@ export default function TabLayout() {
         name="scanner"
         options={{
           title: 'Scanner',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="shield.checkered" color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="shield" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="quiz"
         options={{
           title: 'Quiz',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="brain.head.profile" color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="help-circle" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="feed"
         options={{
           title: 'Arnaques',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="exclamationmark.triangle.fill" color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="alert-triangle" size={24} color={color} />,
         }}
       />
     </Tabs>

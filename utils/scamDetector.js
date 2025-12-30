@@ -1,3 +1,34 @@
+const getFlagLabel = (type) => {
+  const labels = {
+    'suspicious_international_phone': '📞 Numéro international suspect',
+    'fake_official_caps': '🏛️ Faux organisme officiel',
+    'urgency': '⚡ Urgence artificielle',
+    'aggressive_urgency': '🚨 Urgence agressive',
+    'links': '🔗 Lien suspect',
+    'shortened_url': '🔗 URL raccourcie',
+    'fake_official_domain': '🌐 Domaine frauduleux',
+    'scam_like_domain': '🌐 Domaine suspect',
+    'money': '💰 Mention d\'argent',
+    'easy_money': '💰 Argent facile',
+    'threats': '⚠️ Menaces',
+    'impersonation': '🎭 Usurpation d\'identité',
+    'impersonation_family': '👨‍👩‍👧 Usurpation familiale',
+    'anonymous_delivery': '📦 Livreur anonyme',
+    'delivery_scam': '📦 Arnaque livraison',
+    'door_recon': '🏠 Repérage domicile',
+    'vacation_recon': '🏠 Repérage absence',
+    'prizes': '🎁 Faux gain',
+    'personal_info': '🔐 Demande d\'infos personnelles',
+    'telegram_handle': '📱 Contact Telegram/WhatsApp',
+    'emergency_family': '🆘 Urgence familiale',
+    'tech_support': '💻 Faux support technique',
+    'via_url': '🔗 Lien via...',
+    'robot_like_pattern': '🤖 Pattern suspect',
+    'suspicious_phone_pattern': '📞 Numéro anormal',
+    'invalid_phone_format': '📞 Format invalide',
+  };
+  return labels[type] || type.replace(/_/g, ' ');
+};
 export const analyzeMessage = (message, phoneNumber = null) => {
   const patterns = {
     // ========================================
@@ -516,57 +547,62 @@ export const analyzeMessage = (message, phoneNumber = null) => {
   // RECOMMANDATIONS
   // ========================================
 
+  // ========================================
+  // RECOMMANDATIONS (VERSION GUIDE CALME)
+  // ========================================
+
   let recommendation;
   if (score >= 70) {
     recommendation = {
-      action: "🚨 ARNAQUE - NE PAS RÉPONDRE",
-      details: "Ce message est très probablement une arnaque.",
+      action: "Risque élevé détecté",
+      details: "Ce message présente plusieurs caractéristiques typiques des arnaques connues.",
       tips: [
-        "🚫 Ne cliquez sur AUCUN lien",
-        "🚫 Ne communiquez AUCUNE information",
-        "🚫 Ne rappelez PAS ce numéro",
-        "✅ Bloquez immédiatement l'expéditeur",
-        "✅ Signalez sur signal-arnaques.com ou 33700",
+        "Évitez de cliquer sur les liens présents",
+        "Ne partagez aucune information personnelle",
+        "En cas de doute, contactez l'organisme par ses canaux officiels",
+        "Vous pouvez signaler ce message sur signal-arnaques.com ou au 33700",
       ],
     };
   } else if (score >= 40) {
     recommendation = {
-      action: "⚠️ TRÈS SUSPECT",
-      details: "Plusieurs éléments suspects détectés.",
+      action: "Plusieurs signaux suspects",
+      details: "Ce message contient des éléments qui méritent votre attention.",
       tips: [
-        "⚠️ N'ouvrez AUCUN lien",
-        "⚠️ Ne donnez aucune information personnelle",
-        "✅ Vérifiez l'identité de l'expéditeur par un autre moyen",
-        "✅ En cas de doute, ne répondez pas",
+        "Prenez le temps de vérifier l'expéditeur",
+        "Évitez de cliquer sur les liens sans vérification",
+        "Contactez directement l'organisme concerné en cas de doute",
       ],
     };
   } else if (score >= 20) {
     recommendation = {
-      action: "ℹ️ PRUDENCE",
-      details: "Quelques éléments attirent l'attention.",
+      action: "Quelques éléments à noter",
+      details: "Le message semble correct mais certains points attirent l'attention.",
       tips: [
-        "🔍 Vérifiez l'identité de l'expéditeur",
-        "🔍 Méfiez-vous des demandes inhabituelles",
-        "💡 En cas de doute, contactez l'organisme directement",
+        "Vérifiez l'identité de l'expéditeur si vous ne le connaissez pas",
+        "Restez attentif aux demandes inhabituelles",
       ],
     };
   } else {
     recommendation = {
-      action: "✅ Semble légitime",
-      details: "Aucun signe évident d'arnaque détecté.",
+      action: "Aucun signal suspect détecté",
+      details: "Ce message ne présente pas de caractéristiques d'arnaque connues.",
       tips: [
-        "💡 Restez vigilant avec les messages d'inconnus",
-        "🔍 Vérifiez toujours les liens avant de cliquer",
+        "Comme toujours, restez vigilant avec les messages inattendus",
+        "Brad n'est pas infaillible, faites confiance à votre jugement",
       ],
     };
   }
-
+    // Transformer les types en labels français
+    const redFlagsWithLabels = redFlags.map(flag => ({
+      ...flag,
+      label: getFlagLabel(flag.type)
+    }));
   return {
     riskScore: score,
     isScam,
     confidence,
     reasons,
-    redFlags,
+    redFlags : redFlagsWithLabels,
     criticalWarnings,
     recommendation,
   };

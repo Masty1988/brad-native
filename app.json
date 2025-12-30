@@ -18,11 +18,10 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#2563EB",
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundImage": "./assets/images/adaptive-icon.png",
-        "monochromeImage": "./assets/images/adaptive-icon.png"
-      },
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1E3A8A"  // ← Bleu Brad au lieu de noir
+      }
+    },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.mastywebdev.brad"
@@ -58,4 +57,4 @@
       }
     }
   }
-}
+

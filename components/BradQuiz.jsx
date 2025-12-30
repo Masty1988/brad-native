@@ -3,89 +3,27 @@
 // Module Quiz Quotidien - React Native
 // ============================================
 
+import { BradColors } from '@/constants/colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Award, Brain, CheckCircle, TrendingUp, XCircle } from 'lucide-react-native';
+import { Award, Brain, CheckCircle, RefreshCw, TrendingUp, XCircle } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import { BradColors } from '@/constants/colors';
-
-const QUIZ_DATABASE = [
-  {
-    id: 1,
-    date: '2025-11-04',
-    question: "Vous recevez : 'Votre colis est bloqué en douane. Payez 2,99€ pour le débloquer : coliss-fr.xyz' - C'est une arnaque ?",
-    options: [
-      { text: "Oui, c'est une arnaque", correct: true },
-      { text: "Non, c'est légitime", correct: false }
-    ],
-    explanation: "ARNAQUE ! Les vrais services de livraison n'utilisent jamais de domaines .xyz et ne demandent pas de paiement par SMS avec lien suspect.",
-    tip: "Vérifiez toujours le domaine : La Poste = laposte.fr, Colissimo = colissimo.fr",
-    difficulty: "facile"
-  },
-  {
-    id: 2,
-    date: '2025-11-05',
-    question: "SMS de votre banque : 'Activité suspecte détectée. Confirmez vos coordonnées sur bnp-secure.com' - Que faire ?",
-    options: [
-      { text: "Cliquer et confirmer mes infos", correct: false },
-      { text: "Appeler ma banque directement", correct: true },
-      { text: "Répondre au SMS", correct: false }
-    ],
-    explanation: "TOUJOURS appeler votre banque au numéro officiel (sur votre carte). Les banques ne demandent JAMAIS vos infos par SMS.",
-    tip: "Le bon réflexe : numéro officiel uniquement, jamais via SMS/email",
-    difficulty: "moyen"
-  },
-  {
-    id: 3,
-    date: '2025-11-06',
-    question: "'Maman c'est moi, j'ai cassé mon téléphone, nouveau numéro. Peux-tu m'envoyer 200€ urgent ?' - Arnaque ?",
-    options: [
-      { text: "Oui, arnaque classique", correct: true },
-      { text: "Non, c'est vraiment mon enfant", correct: false }
-    ],
-    explanation: "ARNAQUE ULTRA-FRÉQUENTE ! Appellez TOUJOURS l'ancien numéro de votre proche avant tout virement.",
-    tip: "Règle d'or : Argent + nouveau numéro = TOUJOURS vérifier par appel",
-    difficulty: "facile"
-  },
-  {
-    id: 4,
-    date: '2025-11-07',
-    question: "Quel domaine est légitime pour La Poste ?",
-    options: [
-      { text: "laposte-colis.com", correct: false },
-      { text: "laposte.fr", correct: true },
-      { text: "laposte-suivi.net", correct: false }
-    ],
-    explanation: "Seul laposte.fr est officiel ! Les variantes (.com, .net, -suivi) sont TOUTES des arnaques.",
-    tip: "Astuce : Tapez toujours l'URL vous-même, ne cliquez jamais un lien",
-    difficulty: "moyen"
-  },
-  {
-    id: 5,
-    date: '2025-11-08',
-    question: "Vous êtes chez vous en ce moment ? Je suis le livreur Chronopost devant votre porte.' - Que faire ?",
-    options: [
-      { text: "Répondre 'Oui je descends'", correct: false },
-      { text: "Ne JAMAIS répondre, c'est du repérage", correct: true },
-      { text: "Demander le numéro de colis", correct: false }
-    ],
-    explanation: "DANGER ! C'est du repérage pour cambriolage. Les vrais livreurs sonnent, ils ne demandent pas par SMS si vous êtes là.",
-    tip: "Jamais de réponse aux questions 'êtes-vous chez vous' par SMS !",
-    difficulty: "difficile"
-  }
-];
+import { fetchQuestions } from '../utils/quizApi';
 
 export default function BradQuiz() {
+  const [questions, setQuestions] = useState([]);
   const [currentQuiz, setCurrentQuiz] = useState(null);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isAnswered, setIsAnswered] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [stats, setStats] = useState({
     totalQuizzes: 0,
     correctAnswers: 0,
@@ -95,8 +33,27 @@ export default function BradQuiz() {
 
   useEffect(() => {
     loadStats();
-    loadTodayQuiz();
+    loadQuestions();
   }, []);
+
+  const loadQuestions = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await fetchQuestions();
+      if (data && data.length > 0) {
+        setQuestions(data);
+        await loadTodayQuiz(data);
+      } else {
+        setError("Impossible de charger les questions");
+      }
+    } catch (err) {
+      setError("Erreur de connexion");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const loadStats = async () => {
     try {
@@ -109,7 +66,7 @@ export default function BradQuiz() {
     }
   };
 
-  const loadTodayQuiz = async () => {
+  const loadTodayQuiz = async (questionsData) => {
     try {
       const today = new Date().toISOString().split('T')[0];
       const lastQuizDate = await AsyncStorage.getItem('brad_last_quiz_date');
@@ -118,14 +75,14 @@ export default function BradQuiz() {
         const savedAnswer = await AsyncStorage.getItem('brad_today_quiz_answer');
         const quizIndex = await AsyncStorage.getItem('brad_today_quiz_index');
         if (savedAnswer && quizIndex) {
-          setCurrentQuiz(QUIZ_DATABASE[parseInt(quizIndex)]);
+          setCurrentQuiz(questionsData[parseInt(quizIndex)]);
           setIsAnswered(true);
           setSelectedAnswer(JSON.parse(savedAnswer));
         }
       } else {
         const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
-        const quizIndex = daysSinceEpoch % QUIZ_DATABASE.length;
-        setCurrentQuiz(QUIZ_DATABASE[quizIndex]);
+        const quizIndex = daysSinceEpoch % questionsData.length;
+        setCurrentQuiz(questionsData[quizIndex]);
         await AsyncStorage.setItem('brad_today_quiz_index', quizIndex.toString());
       }
     } catch (error) {
@@ -136,7 +93,7 @@ export default function BradQuiz() {
   const handleAnswer = async (optionIndex) => {
     if (isAnswered) return;
 
-    const option = currentQuiz.options[optionIndex];
+    const isCorrect = optionIndex === currentQuiz.correctIndex;
     setSelectedAnswer(optionIndex);
     setIsAnswered(true);
 
@@ -147,9 +104,9 @@ export default function BradQuiz() {
 
       const newStats = {
         totalQuizzes: stats.totalQuizzes + 1,
-        correctAnswers: stats.correctAnswers + (option.correct ? 1 : 0),
-        currentStreak: option.correct ? stats.currentStreak + 1 : 0,
-        bestStreak: option.correct 
+        correctAnswers: stats.correctAnswers + (isCorrect ? 1 : 0),
+        currentStreak: isCorrect ? stats.currentStreak + 1 : 0,
+        bestStreak: isCorrect 
           ? Math.max(stats.bestStreak, stats.currentStreak + 1)
           : stats.bestStreak
       };
@@ -175,7 +132,8 @@ export default function BradQuiz() {
     return Math.round((stats.correctAnswers / stats.totalQuizzes) * 100);
   };
 
-  if (!currentQuiz) {
+  // Loading state
+  if (isLoading) {
     return (
       <View style={styles.loading}>
         <ActivityIndicator size="large" color="#2563EB" />
@@ -184,7 +142,30 @@ export default function BradQuiz() {
     );
   }
 
+  // Error state
+  if (error) {
+    return (
+      <View style={styles.loading}>
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={loadQuestions}>
+          <RefreshCw size={20} color="#fff" />
+          <Text style={styles.retryButtonText}>Réessayer</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (!currentQuiz) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color="#2563EB" />
+        <Text style={styles.loadingText}>Préparation du quiz...</Text>
+      </View>
+    );
+  }
+
   const diffColors = getDifficultyColor(currentQuiz.difficulty);
+  const isCorrectAnswer = selectedAnswer === currentQuiz.correctIndex;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
@@ -224,6 +205,11 @@ export default function BradQuiz() {
           </View>
         </View>
 
+        {/* Category */}
+        <View style={styles.categoryBadge}>
+          <Text style={styles.categoryText}>{currentQuiz.category}</Text>
+        </View>
+
         {/* Question */}
         <View style={styles.questionBox}>
           <Text style={styles.questionText}>{currentQuiz.question}</Text>
@@ -233,7 +219,7 @@ export default function BradQuiz() {
         <View style={styles.optionsContainer}>
           {currentQuiz.options.map((option, index) => {
             const isSelected = selectedAnswer === index;
-            const isCorrect = option.correct;
+            const isCorrect = index === currentQuiz.correctIndex;
             const showResult = isAnswered;
 
             let buttonStyle = [styles.optionButton];
@@ -261,7 +247,7 @@ export default function BradQuiz() {
                 onPress={() => handleAnswer(index)}
                 disabled={isAnswered}
               >
-                <Text style={textStyle}>{option.text}</Text>
+                <Text style={textStyle}>{option}</Text>
                 {showResult && isCorrect && (
                   <CheckCircle size={20} color="#059669" />
                 )}
@@ -278,47 +264,43 @@ export default function BradQuiz() {
           <View style={styles.explanationContainer}>
             <View style={[
               styles.explanationBox,
-              currentQuiz.options[selectedAnswer].correct 
-                ? styles.explanationCorrect 
-                : styles.explanationWrong
+              isCorrectAnswer ? styles.explanationCorrect : styles.explanationWrong
             ]}>
               <View style={styles.explanationHeader}>
-                {currentQuiz.options[selectedAnswer].correct ? (
+                {isCorrectAnswer ? (
                   <CheckCircle size={20} color="#059669" />
                 ) : (
                   <XCircle size={20} color="#DC2626" />
                 )}
                 <Text style={[
                   styles.explanationTitle,
-                  currentQuiz.options[selectedAnswer].correct 
-                    ? styles.explanationTitleCorrect 
-                    : styles.explanationTitleWrong
+                  isCorrectAnswer ? styles.explanationTitleCorrect : styles.explanationTitleWrong
                 ]}>
-                  {currentQuiz.options[selectedAnswer].correct ? '✅ Bravo !' : '❌ Pas tout à fait'}
+                  {isCorrectAnswer ? '✅ Bravo !' : '❌ Pas tout à fait'}
                 </Text>
               </View>
               <Text style={styles.explanationText}>{currentQuiz.explanation}</Text>
             </View>
 
             <View style={styles.tipBox}>
-              <Text style={styles.tipTitle}>💡 Conseil Brad.</Text>
-              <Text style={styles.tipText}>{currentQuiz.tip}</Text>
-            </View>
-
-            <View style={styles.premiumBox}>
-              <Text style={styles.premiumText}>
-                <Text style={styles.premiumBold}>🎓 Brad. Premium</Text> : Quiz personnalisés basés sur tes scans + explications IA détaillées
+              <Text style={styles.tipTitle}>💡 À retenir</Text>
+              <Text style={styles.tipText}>
+                {currentQuiz.explanation}
               </Text>
-              <TouchableOpacity>
-                <Text style={styles.premiumLink}>Essayer 7 jours gratuits →</Text>
-              </TouchableOpacity>
             </View>
 
             <View style={styles.nextQuizBox}>
-              <Text style={styles.nextQuizText}>Prochain quiz disponible demain à 9h ⏰</Text>
+              <Text style={styles.nextQuizText}>Prochain quiz disponible demain ⏰</Text>
             </View>
           </View>
         )}
+      </View>
+
+      {/* Source */}
+      <View style={styles.sourceBox}>
+        <Text style={styles.sourceText}>
+          📚 {questions.length} questions disponibles
+        </Text>
       </View>
     </ScrollView>
   );
@@ -336,11 +318,31 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
   loadingText: {
     marginTop: 16,
     fontSize: 14,
     color: BradColors.text.secondary,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#DC2626',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#2563EB',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontWeight: '600',
   },
   statsGrid: {
     flexDirection: 'row',
@@ -378,7 +380,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
   },
   quizTitleRow: {
     flexDirection: 'row',
@@ -398,6 +400,20 @@ const styles = StyleSheet.create({
   difficultyText: {
     fontSize: 12,
     fontWeight: 'bold',
+    textTransform: 'capitalize',
+  },
+  categoryBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#E0E7FF',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  categoryText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#4338CA',
     textTransform: 'capitalize',
   },
   questionBox: {
@@ -508,32 +524,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#1E40AF',
   },
-  premiumBox: {
-    backgroundColor: '#FAF5FF',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#E9D5FF',
-  },
-  premiumText: {
-    fontSize: 14,
-    color: '#374151',
-    marginBottom: 8,
-  },
-  premiumBold: {
-    fontWeight: 'bold',
-    color: '#7E22CE',
-  },
-  premiumLink: {
-    fontSize: 12,
-    color: '#7E22CE',
-    fontWeight: '600',
-  },
   nextQuizBox: {
     alignItems: 'center',
   },
   nextQuizText: {
     fontSize: 14,
     color: '#6B7280',
+  },
+  sourceBox: {
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  sourceText: {
+    fontSize: 12,
+    color: '#9CA3AF',
   },
 });

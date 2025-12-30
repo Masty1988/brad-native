@@ -3,8 +3,10 @@
 // Module Scanner SMS - React Native
 // ============================================
 
+import { BradColors, getRiskBackground, getRiskColor } from '@/constants/colors';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as WebBrowser from 'expo-web-browser'; // ← AJOUTE CETTE LIGNE
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -16,9 +18,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import * as WebBrowser from 'expo-web-browser'; // ← AJOUTE CETTE LIGNE
 import { analyzeMessage } from '../utils/scamDetector';
-import { BradColors, getRiskColor, getRiskBackground } from '@/constants/colors';
 
 export default function BradScanner() {
   const [message, setMessage] = useState('');
@@ -74,10 +74,10 @@ export default function BradScanner() {
   // Risk color and background helpers are imported from constants/colors
 
   const getRiskLabel = (score) => {
-    if (score >= 70) return 'DANGER';
-    if (score >= 40) return 'SUSPECT';
-    if (score >= 20) return 'PRUDENCE';
-    return 'OK';
+    if (score >= 70) return 'Risque élevé';
+    if (score >= 40) return 'Risque probable';
+    if (score >= 20) return 'Prudence';
+    return 'Risque faible';
   };
   const openCybermalveillance = async () => {
   try {
@@ -186,13 +186,14 @@ export default function BradScanner() {
 
           {/* Main results card */}
           <View style={styles.card}>
-            {/* Score */}
+            {/* Risk Level (plus de score chiffré) */}
             <View style={styles.scoreSection}>
-              <View style={styles.scoreCircle}>
-                <Text style={[styles.scoreNumber, { color: getRiskColor(analysis.riskScore) }]}>
-                  {analysis.riskScore}
-                </Text>
-                <Text style={styles.scoreLabel}>SCORE</Text>
+              <View style={[styles.riskIndicator, { backgroundColor: getRiskBackground(analysis.riskScore) }]}>
+                <Feather 
+                  name={analysis.riskScore >= 70 ? "alert-triangle" : analysis.riskScore >= 40 ? "alert-circle" : "check-circle"} 
+                  size={48} 
+                  color={getRiskColor(analysis.riskScore)} 
+                />
               </View>
               <View style={[styles.riskBadge, { backgroundColor: getRiskColor(analysis.riskScore) }]}>
                 <Text style={styles.riskBadgeText}>{getRiskLabel(analysis.riskScore)}</Text>
@@ -242,7 +243,7 @@ export default function BradScanner() {
                     styles.flagItem,
                     flag.severity === 'critical' && styles.flagItemCritical
                   ]}>
-                    <Text style={styles.flagType}>{flag.type.replace('_', ' ')}</Text>
+                    <Text style={styles.flagType}>{flag.label || flag.type}</Text>
                     {flag.matches && (
                       <Text style={styles.flagMatches}>
                         Détecté : {flag.matches.join(', ')}
@@ -610,5 +611,13 @@ resourceButtonText: {
   color: '#fff',
   fontSize: 14,
   fontWeight: '600',
+},
+riskIndicator: {
+  width: 100,
+  height: 100,
+  borderRadius: 50,
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginBottom: 16,
 },
 });
