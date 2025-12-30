@@ -10,7 +10,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#2563EB"
     },
-    "scheme": "brad.",
+    "scheme": "brad",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -19,9 +19,8 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#1E3A8A"  // ← Bleu Brad au lieu de noir
-      }
-    },
+        "backgroundColor": "#1E3A8A"
+      },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.mastywebdev.brad"
@@ -57,4 +56,4 @@
       }
     }
   }
-
+}

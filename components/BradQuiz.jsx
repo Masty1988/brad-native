@@ -2,6 +2,7 @@
 // components/BradQuiz.jsx
 // Module Quiz Quotidien - React Native
 // ============================================
+import { Feather } from '@expo/vector-icons';
 
 import { BradColors } from '@/constants/colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -10,6 +11,7 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -132,6 +134,25 @@ export default function BradQuiz() {
     return Math.round((stats.correctAnswers / stats.totalQuizzes) * 100);
   };
 
+  const shareResult = async () => {
+    const isCorrect = selectedAnswer === currentQuiz.correctIndex;
+    const emoji = isCorrect ? '✅' : '❌';
+    const dayNumber = Math.floor(Date.now() / (1000 * 60 * 60 * 24)) % questions.length + 1;
+    
+    const message = `🛡️ Brad - Quiz Arnaque du jour #${dayNumber}
+${emoji} ${isCorrect ? 'Détecté !' : 'Raté...'}
+🔥 Série : ${stats.currentStreak} jour${stats.currentStreak > 1 ? 's' : ''}
+📊 Taux de réussite : ${getSuccessRate()}%
+
+👉 Télécharge Brad pour te protéger des arnaques !`;
+try {
+  await Share.share({ message });
+} catch (error) {
+  console.error('Erreur partage:', error);
+}
+};
+
+
   // Loading state
   if (isLoading) {
     return (
@@ -166,6 +187,7 @@ export default function BradQuiz() {
 
   const diffColors = getDifficultyColor(currentQuiz.difficulty);
   const isCorrectAnswer = selectedAnswer === currentQuiz.correctIndex;
+
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
@@ -291,8 +313,13 @@ export default function BradQuiz() {
 
             <View style={styles.nextQuizBox}>
               <Text style={styles.nextQuizText}>Prochain quiz disponible demain ⏰</Text>
+              <TouchableOpacity style={styles.shareButton} onPress={shareResult}>
+              <Feather name="share-2" size={20} color="#fff" />
+              <Text style={styles.shareButtonText}>Partager mon résultat</Text>
+              </TouchableOpacity>
             </View>
           </View>
+          
         )}
       </View>
 
@@ -538,5 +565,21 @@ const styles = StyleSheet.create({
   sourceText: {
     fontSize: 12,
     color: '#9CA3AF',
+  },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#2563EB',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginTop: 16,
+  },
+  shareButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
   },
 });
