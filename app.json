@@ -18,7 +18,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#1E3A8A"
       },
       "edgeToEdgeEnabled": true,
@@ -54,6 +54,12 @@
       "eas": {
         "projectId": "88d11410-d80f-4e69-8b10-e06d3ff75f62"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/88d11410-d80f-4e69-8b10-e06d3ff75f62"
     }
   }
 }
