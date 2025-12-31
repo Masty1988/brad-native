@@ -9,7 +9,8 @@
       "Bash(eas build:*)",
       "Bash(eas:*)",
       "Bash(where:*)",
-      "Bash(git clone:*)"
+      "Bash(git clone:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []
