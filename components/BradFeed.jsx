@@ -283,6 +283,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: BradColors.grisClair,
+    paddingBottom : 80,
   },
   content: {
     padding: 16,
