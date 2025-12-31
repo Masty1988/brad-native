@@ -354,27 +354,24 @@ export const analyzeMessage = (message, phoneNumber = null) => {
       if (key === "door_recon" || key === "vacation_recon") {
         criticalWarnings.push({
           type: "DANGER_CAMBRIOLAGE",
-          message: "🚨 ATTENTION : Tentative de repérage pour cambriolage !",
-          action:
-            "Ne répondez JAMAIS à ce type de question. Contactez la police si répété.",
+          message: "Ce type de question est souvent associé à du repérage.",
+          action: "Il est recommandé de ne pas répondre à ces questions personnelles.",
         });
       }
 
       if (key === "impersonation_family") {
         criticalWarnings.push({
           type: "DANGER_USURPATION",
-          message: "⚠️ Arnaque d'usurpation familiale très courante !",
-          action: "Appelez votre proche sur son ANCIEN numéro pour vérifier.",
+          message: "Ce message ressemble à une usurpation d'identité familiale.",
+          action: "Pensez à appeler votre proche sur son ancien numéro pour vérifier.",
         });
       }
 
       if (key === "anonymous_delivery") {
         criticalWarnings.push({
           type: "DANGER_FAUX_LIVREUR",
-          message:
-            "⚠️ Les vrais livreurs s'identifient avec nom de société et numéro de suivi !",
-          action:
-            "N'ouvrez PAS. Vérifiez sur le site officiel du transporteur.",
+          message: "Un vrai livreur s'identifie généralement avec un numéro de suivi.",
+          action: "En cas de doute, vérifiez sur le site officiel du transporteur.",
         });
       }
     }
@@ -384,29 +381,32 @@ export const analyzeMessage = (message, phoneNumber = null) => {
   // ANALYSE DOMAINES WEB
   // ========================================
 
-  // Domaines très suspects (TLD exotiques)
-  const suspiciousDomains = message.match(
-    /https?:\/\/[a-z0-9-]+\.(xyz|top|club|tk|ml|ga|info|de)/gi
-  );
-  if (suspiciousDomains) {
-    // Vérifier si c'est un TLD bizarre pour un service français
-    const hasFrenchContext =
-      /colissimo|laposte|chronopost|ameli|impots|caf|bnp|credit.agricole/gi.test(
-        message
-      );
-    if (hasFrenchContext) {
-      score += 30;
-      reasons.push("Domaine suspect imitant service français");
-      redFlags.push({
-        type: "dangerous_domain_impersonation",
-        severity: "critical",
-      });
-    } else {
-      score += 20;
-      reasons.push("Extension de domaine suspecte");
-      redFlags.push({ type: "suspicious_domain", severity: "high" });
-    }
+  // Domaines très suspects (TLD exotiques) - évite les doublons
+const suspiciousDomains = message.match(
+  /https?:\/\/[a-z0-9-]+\.(xyz|top|club|tk|ml|ga|info|de)/gi
+);
+const alreadyHasDomainFlag = redFlags.some(f => 
+  f.type === 'scam_like_domain' || f.type === 'fake_official_domain'
+);
+
+if (suspiciousDomains && !alreadyHasDomainFlag) {
+  const hasFrenchContext =
+    /colissimo|laposte|chronopost|ameli|impots|caf|bnp|credit.agricole/gi.test(
+      message
+    );
+  if (hasFrenchContext) {
+    score += 30;
+    reasons.push("Domaine suspect imitant service français");
+    redFlags.push({
+      type: "dangerous_domain_impersonation",
+      severity: "critical",
+    });
+  } else {
+    score += 20;
+    reasons.push("Extension de domaine suspecte");
+    redFlags.push({ type: "suspicious_domain", severity: "high" });
   }
+}
 
   // Domaines officiels (légitimité)
   const officialDomains = message.match(
@@ -500,8 +500,8 @@ export const analyzeMessage = (message, phoneNumber = null) => {
     reasons.push("🚨 COMBO CRITIQUE : Urgence + Usurpation + Domaine suspect");
     criticalWarnings.push({
       type: "PHISHING_ATTEMPT",
-      message: "🚨 Tentative de phishing détectée !",
-      action: "ARNAQUE quasi-certaine. Ne cliquez sur RIEN.",
+      message: "Ce message présente plusieurs signaux de phishing.",
+      action: "Il est fortement recommandé de ne pas cliquer sur les liens.",
     });
   }
 
@@ -511,8 +511,8 @@ export const analyzeMessage = (message, phoneNumber = null) => {
     reasons.push("🚨 COMBO : Arnaque emploi fictif");
     criticalWarnings.push({
       type: "JOB_SCAM",
-      message: "⚠️ Arnaque à l'emploi fictif classique !",
-      action: "Aucune entreprise légitime ne recrute par Telegram.",
+      message: "Ce type d'offre ressemble à une arnaque à l'emploi.",
+      action: "Les entreprises légitimes ne recrutent généralement pas via Telegram.",
     });
   }
 
@@ -524,8 +524,8 @@ export const analyzeMessage = (message, phoneNumber = null) => {
     reasons.push("🚨 COMBO : Fausse livraison avec paiement");
     criticalWarnings.push({
       type: "FAKE_DELIVERY",
-      message: "⚠️ Arnaque au faux colis !",
-      action: "Les transporteurs ne demandent JAMAIS de paiement par SMS.",
+      message: "Ce message ressemble à une arnaque au faux colis.",
+      action: "Les transporteurs ne demandent généralement pas de paiement par SMS.",
     });
   }
   // COMBO 4 : Urgence + Argent + Lien (garde l'ancien aussi)
@@ -542,10 +542,6 @@ export const analyzeMessage = (message, phoneNumber = null) => {
   const isScam = score >= 40;
   const confidence =
     score >= 70 ? "Élevée" : score >= 40 ? "Moyenne" : "Faible";
-
-  // ========================================
-  // RECOMMANDATIONS
-  // ========================================
 
   // ========================================
   // RECOMMANDATIONS (VERSION GUIDE CALME)

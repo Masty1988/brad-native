@@ -6,7 +6,7 @@
 import { BradColors, getRiskBackground, getRiskColor } from '@/constants/colors';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as WebBrowser from 'expo-web-browser'; // ← AJOUTE CETTE LIGNE
+import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -170,9 +170,9 @@ export default function BradScanner() {
           {analysis.criticalWarnings && analysis.criticalWarnings.length > 0 && (
             <View style={styles.criticalWarning}>
               <View style={styles.criticalWarningContent}>
-                <Feather name="alert-octagon" size={32} color="#fff" />
+                <Feather name="alert-triangle" size={28} color="#fff" />
                 <View style={styles.criticalWarningText}>
-                  <Text style={styles.criticalWarningTitle}>ALERTE CRITIQUE</Text>
+                  <Text style={styles.criticalWarningTitle}>Point d'attention</Text>
                   {analysis.criticalWarnings.map((warning, idx) => (
                     <View key={idx} style={styles.warningItem}>
                       <Text style={styles.warningMessage}>{warning.message}</Text>
@@ -254,16 +254,16 @@ export default function BradScanner() {
               </View>
             )}
 
-            {/* Confidence */}
+            {/* Confidence
             <View style={styles.confidenceSection}>
                 <Text style={styles.confidenceText}>
-                Niveau de confiance : <Text style={styles.confidenceBold}>{analysis.confidence}</Text>
+                Fiabilité de l'analyse : <Text style={styles.confidenceBold}>{analysis.confidence}</Text>
               </Text>
-            </View>
+            </View> */}
           </View>
         </View>
       )}
-        {/*Ressourese section*/}
+        {/*Ressourses section*/}
             <View style={styles.resourcesSection}>
               <View style={styles.resourcesHeader}>
                 <Feather name="info" size={18} color="#2563EB" />

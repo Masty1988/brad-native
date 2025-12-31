@@ -3,6 +3,7 @@
 // Module Quiz Quotidien - React Native
 // ============================================
 import { Feather } from '@expo/vector-icons';
+import { getConfig } from '../utils/configApi';
 
 import { BradColors } from '@/constants/colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -136,22 +137,33 @@ export default function BradQuiz() {
 
   const shareResult = async () => {
     const isCorrect = selectedAnswer === currentQuiz.correctIndex;
-    const emoji = isCorrect ? '✅' : '❌';
     const dayNumber = Math.floor(Date.now() / (1000 * 60 * 60 * 24)) % questions.length + 1;
     
-    const message = `🛡️ Brad - Quiz Arnaque du jour #${dayNumber}
-${emoji} ${isCorrect ? 'Détecté !' : 'Raté...'}
-🔥 Série : ${stats.currentStreak} jour${stats.currentStreak > 1 ? 's' : ''}
-📊 Taux de réussite : ${getSuccessRate()}%
-
-👉 Télécharge Brad pour te protéger des arnaques !`;
-try {
-  await Share.share({ message });
-} catch (error) {
-  console.error('Erreur partage:', error);
-}
-};
-
+    let downloadLink = '';
+    try {
+      const config = await getConfig();
+      if (config && config.downloadLink) {
+        downloadLink = config.downloadLink;
+      }
+    } catch (error) {
+      console.error('Erreur config:', error);
+    }
+  
+    const message = `🛡️ BRAD - Quiz Arnaque #${dayNumber}
+  
+  📝 "${currentQuiz.question}"
+  
+  ${isCorrect ? '✅ J\'ai détecté l\'arnaque !' : '❌ Je me suis fait avoir...'}
+  🔥 Série : ${stats.currentStreak} jour(s)
+  
+  🎯 Toi aussi, teste tes réflexes anti-arnaques !${downloadLink ? '\n👉 ' + downloadLink : ''}`;
+  
+    try {
+      await Share.share({ message });
+    } catch (error) {
+      console.error('Erreur partage:', error);
+    }
+  };
 
   // Loading state
   if (isLoading) {
