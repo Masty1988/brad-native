@@ -15,9 +15,6 @@ web-build/
 .DS_Store
 *.log
 
-# Git files
-.git/
-
 # Backup files
 *.backup
 *.orig
