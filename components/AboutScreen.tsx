@@ -2,8 +2,12 @@ import { BradColors } from '@/constants/colors';
 import { Feather } from '@expo/vector-icons';
 import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-export default function AboutScreen({ onClose }) {
-  const openLink = (url) => {
+type AboutScreenProps = {
+  onClose: () => void;
+};
+
+export default function AboutScreen({ onClose }: AboutScreenProps) {
+  const openLink = (url: string) => {
     Linking.openURL(url);
   };
 
@@ -73,6 +77,19 @@ export default function AboutScreen({ onClose }) {
               <Feather name="external-link" size={16} color="#999" />
             </TouchableOpacity>
           </View>
+          {/* Légal */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Informations légales</Text>
+              
+              <TouchableOpacity 
+                style={styles.linkButton} 
+                onPress={() => openLink('https://mastywebdev.fr/brad/privacy')}
+              >
+                <Feather name="lock" size={20} color={BradColors.bleuBrad} />
+                <Text style={styles.linkText}>Politique de confidentialité</Text>
+                <Feather name="external-link" size={16} color="#999" />
+              </TouchableOpacity>
+            </View>
 
           {/* Signaler */}
           <View style={styles.section}>
@@ -96,6 +113,7 @@ export default function AboutScreen({ onClose }) {
               <Feather name="external-link" size={16} color="#999" />
             </TouchableOpacity>
           </View>
+          
 
           {/* Footer */}
           <View style={styles.footer}>
