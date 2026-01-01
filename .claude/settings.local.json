@@ -17,7 +17,8 @@
       "Bash(cmd //c \"set EAS_NO_VCS=1 && npx eas build --platform android --profile preview --non-interactive\")",
       "Bash(ls:*)",
       "Bash(git add:*)",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: configure EAS Update and fix adaptive icon path\n\n- Install and configure expo-updates package\n- Add update channels for development, preview, and production builds\n- Fix adaptive icon path from ./assets/adaptive-icon.png to ./assets/images/adaptive-icon.png\n- Configure runtime version policy\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: configure EAS Update and fix adaptive icon path\n\n- Install and configure expo-updates package\n- Add update channels for development, preview, and production builds\n- Fix adaptive icon path from ./assets/adaptive-icon.png to ./assets/images/adaptive-icon.png\n- Configure runtime version policy\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(cmd //c \"set EAS_NO_VCS=1 && npx eas build --platform android --profile production --non-interactive\")"
     ],
     "deny": [],
     "ask": []

@@ -23,7 +23,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.mastywebdev.brad"
+      "package": "com.mastywebdev.brad",
+      "versionCode": 1
     },
     "web": {
       "output": "static",
